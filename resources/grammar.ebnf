@@ -1,0 +1,489 @@
+(* ============================================================================
+   Flow Markup Language - EBNF Grammar
+   Version: 0.1-draft
+
+   This grammar defines the syntax of Flow, a post-Djot lightweight markup
+   language with visual mnemonics and human-centered design.
+
+   Notation:
+   - (*...*) = comment
+   - 'x'     = terminal character
+   - "x"     = terminal string
+   - x | y   = alternation
+   - x y     = concatenation
+   - [x]     = optional (0 or 1)
+   - {x}     = repetition (0 or more)
+   - x+      = repetition (1 or more)
+   - x - y   = exception (x but not y)
+   - (x)     = grouping
+   ============================================================================ *)
+
+(* ============================================================================
+   PART 1: DOCUMENT STRUCTURE
+   ============================================================================ *)
+
+document = [frontmatter], {block}, EOF ;
+
+frontmatter = frontmatter_delimiter, yaml_content, frontmatter_delimiter, newline ;
+frontmatter_delimiter = "---", newline ;
+yaml_content = (* valid YAML content, parsed by YAML parser *) ;
+
+block = heading
+      | thematic_break
+      | code_block
+      | blockquote
+      | list
+      | table
+      | admonition
+      | comment_block
+      | raw_block
+      | paragraph
+      | blank_line ;
+
+blank_line = {whitespace}, newline ;
+
+(* ============================================================================
+   PART 2: BLOCK ELEMENTS
+   ============================================================================ *)
+
+(* --- Headings --- *)
+heading = atx_heading | setext_heading ;
+
+atx_heading = heading_marker, space, inline_content, [attributes], newline ;
+heading_marker = '#' | "##" | "###" | "####" | "#####" | "######" ;
+
+setext_heading = inline_content, newline, setext_underline, newline ;
+setext_underline = ('=' | '-')+, newline ;
+
+(* --- Thematic Breaks --- *)
+thematic_break = (('-', '-', '-', {'-'}) | ('*', '*', '*', {'*'}) | ('_', '_', '_', {'_'})), newline ;
+
+(* --- Code Blocks --- *)
+code_block = fenced_code_block ;
+
+fenced_code_block = code_fence_open, [language_info], [attributes], newline,
+                    code_content,
+                    code_fence_close, newline ;
+
+code_fence_open = backtick_fence | tilde_fence ;
+code_fence_close = backtick_fence | tilde_fence ;  (* must match opener length *)
+
+backtick_fence = '`', '`', '`', {'`'} ;
+tilde_fence = '~', '~', '~', {'~'} ;
+
+language_info = identifier ;
+code_content = (* any text until matching fence, preserved literally *) ;
+
+(* --- Blockquotes --- *)
+blockquote = blockquote_line+, [caption] ;
+blockquote_line = '>', [' '], inline_content, newline ;
+
+(* --- Lists --- *)
+list = unordered_list | ordered_list | definition_list ;
+
+unordered_list = unordered_item+ ;
+unordered_item = bullet_marker, space, list_item_content ;
+bullet_marker = '-' | '*' | '+' ;
+
+ordered_list = ordered_item+ ;
+ordered_item = ordered_marker, space, list_item_content ;
+ordered_marker = digit+, '.'
+               | letter, '.'
+               | roman_numeral, '.' ;
+
+list_item_content = inline_content, newline, {list_continuation | nested_list} ;
+list_continuation = indent, inline_content, newline ;
+nested_list = indent, list ;
+indent = space, space, {space} ;  (* 2+ spaces *)
+
+(* Task lists are unordered lists with special markers *)
+task_marker = '[', task_state, ']', space ;
+task_state = ' ' | 'x' | 'X' | '-' | '>' | '?' ;
+
+(* --- Definition Lists --- *)
+definition_list = definition_entry+ ;
+definition_entry = definition_term+, definition_body+ ;
+definition_term = "::", space, inline_content, newline ;
+definition_body = ':', space, space, inline_content, newline, {definition_continuation} ;
+definition_continuation = (space, space, space, inline_content, newline)
+                        | (backslash, newline, space, space, space, inline_content, newline) ;
+
+(* --- Tables --- *)
+table = table_row+, [caption] ;
+
+table_row = standard_row | continuation_row ;
+
+standard_row = '|', table_cell, {'|', table_cell}, '|', newline ;
+
+continuation_row = '+', table_cell, {'|', table_cell}, '|', newline ;
+
+table_cell = header_cell | data_cell | span_cell ;
+
+header_cell = '=', [alignment_marker], {whitespace}, cell_content, {whitespace} ;
+data_cell = {whitespace}, cell_content, {whitespace} ;
+span_cell = rowspan_marker | colspan_marker ;
+
+rowspan_marker = {whitespace}, '^', {whitespace} ;
+colspan_marker = {whitespace}, '<', {whitespace} ;
+
+alignment_marker = '<' | '>' | '~' ;  (* left, right, center *)
+
+cell_content = inline_content - '|' ;  (* no unescaped pipes *)
+
+(* --- Captions --- *)
+caption = '^', space, inline_content, newline ;
+
+(* --- Admonitions --- *)
+admonition = admonition_open, newline,
+             {block - admonition_close}+,
+             admonition_close, newline ;
+
+admonition_open = ":::", space, admonition_type, [space, quoted_title], [attributes] ;
+admonition_close = ":::" ;
+
+admonition_type = "note" | "tip" | "warning" | "danger" | "info"
+                | "success" | "example" | "quote" | "details"
+                | identifier ;  (* custom types *)
+
+quoted_title = '"', {character - '"'}, '"' ;
+
+(* --- Comments --- *)
+comment_line = "%%", {character}, newline ;
+
+comment_block = comment_block_open, newline,
+                {character | newline},
+                comment_block_close, newline ;
+
+comment_block_open = "%%%", {'%'} ;  (* 3+ percent signs *)
+comment_block_close = "%%%", {'%'} ;  (* must match opener length *)
+
+(* --- Raw Blocks --- *)
+raw_block = "```raw", space, format_name, newline,
+            raw_content,
+            "```", newline ;
+
+format_name = "html" | "latex" | identifier ;
+raw_content = (* any content until closing fence *) ;
+
+(* --- Paragraphs --- *)
+paragraph = inline_content+, blank_line ;
+
+
+(* ============================================================================
+   PART 3: INLINE ELEMENTS
+   ============================================================================ *)
+
+inline_content = {inline_element | text_run}+ ;
+
+inline_element = escaped_char
+               | code_span
+               | autolink
+               | link
+               | image
+               | math_inline
+               | emphasis
+               | strong
+               | bold_italic
+               | underline
+               | strikethrough
+               | superscript
+               | subscript
+               | highlight
+               | footnote
+               | extension_inline
+               | editorial_markup
+               | mention
+               | tag
+               | smart_typography
+               | hard_break
+               | soft_break ;
+
+text_run = (character - special_char)+ ;
+
+special_char = '/' | '*' | '_' | '~' | '^' | '`' | '[' | ']'
+             | '!' | '$' | '{' | '}' | '<' | '>' | '@' | '#'
+             | ',' | '=' | ':' | '%' | '\' ;
+
+(* --- Escaped Characters --- *)
+escaped_char = '\', ascii_punctuation ;
+ascii_punctuation = '!' | '"' | '#' | '$' | '%' | '&' | "'" | '(' | ')'
+                  | '*' | '+' | ',' | '-' | '.' | '/' | ':' | ';'
+                  | '<' | '=' | '>' | '?' | '@' | '[' | '\' | ']'
+                  | '^' | '_' | '`' | '{' | '|' | '}' | '~' ;
+
+(* --- Code Spans --- *)
+code_span = backtick_run, code_span_content, backtick_run, [language_hint] ;
+backtick_run = '`'+ ;  (* matching count *)
+code_span_content = (* any chars except matching backtick run *) ;
+language_hint = '{', identifier, '}' ;
+
+(* --- Links --- *)
+link = inline_link | reference_link | collapsed_reference_link | autolink | auto_text_link ;
+
+inline_link = '[', link_text, ']', '(', link_destination, [link_title], ')' ;
+reference_link = '[', link_text, ']', '[', reference_label, ']' ;
+collapsed_reference_link = '[', link_text, ']', '[', ']' ;
+
+link_text = inline_content - ']' ;
+link_destination = url | ('<', url, '>') ;
+link_title = space, ('"', {character - '"'}, '"')
+           | space, ("'", {character - "'"}, "'") ;
+
+reference_label = {character - ']'}+ ;
+reference_definition = '[', reference_label, ']', ':', space, url, [link_title], newline ;
+
+autolink = '<', (url_autolink | email_autolink), '>' ;
+url_autolink = scheme, ':', {url_char}+ ;
+email_autolink = {email_char}+, '@', {email_char}+, '.', {letter}+ ;
+
+auto_text_link = "</#", identifier, '>' ;  (* cross-reference with auto text *)
+
+url = scheme, ':', {url_char}+ ;
+scheme = letter, {letter | digit | '+' | '-' | '.'}+ ;
+url_char = letter | digit | '-' | '.' | '_' | '~' | ':' | '/' | '?'
+         | '#' | '[' | ']' | '@' | '!' | '$' | '&' | "'" | '(' | ')'
+         | '*' | '+' | ',' | ';' | '=' | '%' ;
+
+(* --- Images --- *)
+image = '!', '[', alt_text, ']', '(', image_source, [image_title], ')', [attributes] ;
+alt_text = {character - ']'} ;
+image_source = url ;
+image_title = link_title ;
+
+(* image with caption follows on next line *)
+image_with_caption = image, newline, caption ;
+
+(* --- Math --- *)
+math_inline = '$', math_content, '$' ;
+math_block = "$$", newline, math_content, newline, "$$" ;
+math_content = (* LaTeX math content, no unescaped delimiters *) ;
+
+(* Alternative math syntax *)
+math_inline_alt = '\(', math_content, '\)' ;
+math_block_alt = '\[', newline, math_content, newline, '\]' ;
+
+(* --- Emphasis (follows Djot word boundary rules) --- *)
+
+(* Opener: delimiter NOT followed by whitespace *)
+(* Closer: delimiter NOT preceded by whitespace *)
+
+emphasis = '/', emphasis_content, '/' ;  (* italic *)
+strong = '*', strong_content, '*' ;       (* bold *)
+bold_italic = "/*", bi_content, "*/" ;    (* combined *)
+underline = '_', underline_content, '_' ;
+strikethrough = '~', strike_content, '~' ;
+superscript = '^', super_content, '^' ;
+subscript = ",,", sub_content, ",," ;
+highlight = "==", highlight_content, "==" ;
+
+emphasis_content = (inline_element | text_run - '/')+ ;
+strong_content = (inline_element | text_run - '*')+ ;
+bi_content = (inline_element | text_run - "*/")+;
+underline_content = (inline_element | text_run - '_')+ ;
+strike_content = (inline_element | text_run - '~')+ ;
+super_content = (inline_element | text_run - '^')+ ;
+sub_content = (inline_element | text_run - ",,")+;
+highlight_content = (inline_element | text_run - "==")+;
+
+(* Word boundary rule for emphasis openers/closers *)
+emphasis_open_condition = (* preceding char is whitespace or start, following is non-whitespace *) ;
+emphasis_close_condition = (* preceding char is non-whitespace, following is whitespace or end *) ;
+
+(* --- Footnotes --- *)
+footnote = inline_footnote | reference_footnote ;
+inline_footnote = "[^", footnote_content, ']' ;
+reference_footnote = "[^", footnote_label, ']' ;
+footnote_label = identifier ;
+footnote_content = inline_content ;
+
+footnote_definition = "[^", footnote_label, "]:", space, inline_content, newline ;
+
+sidenote = "[>", inline_content, ']' ;
+
+(* --- Extensions --- *)
+extension_inline = ':', extension_name, '[', extension_content, ']', [attributes] ;
+extension_name = identifier ;
+extension_content = {character - ']'} ;
+
+(* --- Editorial Markup (CriticMarkup-inspired) --- *)
+editorial_markup = addition | deletion | substitution | editorial_highlight | editorial_comment ;
+
+addition = "{+", inline_content, "+}" ;
+deletion = "{-", inline_content, "-}" ;
+substitution = "{~", inline_content, "~>", inline_content, "~}" ;
+editorial_highlight = "{=", inline_content, "=}" ;
+editorial_comment = "{#", inline_content, "#}" ;
+
+(* --- Mentions and Tags --- *)
+mention = '@', mention_name ;
+mention_name = (letter | digit | '_' | '-')+ ;
+
+tag = '#', tag_name ;
+tag_name = (letter | digit | '_' | '-')+ ;
+
+(* Boundary rules: must be preceded by whitespace or start of content *)
+mention_boundary = (* @name must have word boundary before @ *) ;
+tag_boundary = (* #name must have word boundary before # *) ;
+
+(* --- Smart Typography --- *)
+smart_typography = em_dash | en_dash | ellipsis | smart_quote
+                 | arrow | comparison | fraction | symbol ;
+
+em_dash = "---" ;     (* → — *)
+en_dash = "--" ;      (* → – *)
+ellipsis = "..." ;    (* → … *)
+
+smart_quote = smart_double_quote | smart_single_quote ;
+smart_double_quote = '"', {character - '"'}, '"' ;
+smart_single_quote = "'", {character - "'"}, "'" ;
+
+arrow = "->" | "<-" | "<->" | "=>" ;
+comparison = "!=" | "<=" | ">=" ;
+fraction = "1/2" | "1/4" | "3/4" | "1/3" | "2/3" ;
+symbol = "(c)" | "(r)" | "(tm)" | "+-" ;
+
+(* --- Breaks --- *)
+hard_break = '\', newline ;  (* backslash at end of line *)
+soft_break = newline ;        (* regular line ending within paragraph *)
+
+(* ============================================================================
+   PART 4: ATTRIBUTES
+   ============================================================================ *)
+
+attributes = '{', attribute_list, '}' ;
+attribute_list = attribute, {whitespace, attribute} ;
+
+attribute = id_attribute | class_attribute | key_value_attribute ;
+
+id_attribute = '#', identifier ;
+class_attribute = '.', identifier ;
+key_value_attribute = identifier, '=', attribute_value ;
+
+attribute_value = unquoted_value | quoted_value ;
+unquoted_value = (letter | digit | '-' | '_')+ ;
+quoted_value = '"', {character - '"'}, '"'
+             | "'", {character - "'"}, "'" ;
+
+(* Block-level attributes appear on preceding line *)
+block_attributes = attributes, newline ;
+
+(* ============================================================================
+   PART 5: ABBREVIATIONS
+   ============================================================================ *)
+
+abbreviation_definition = "*[", abbreviation_term, "]:", space, abbreviation_expansion, newline ;
+abbreviation_term = (letter | digit)+ ;
+abbreviation_expansion = {character - newline}+ ;
+
+(* ============================================================================
+   PART 6: INCLUDES
+   ============================================================================ *)
+
+include_directive = "{{", space, include_path, [include_section], [include_options], space, "}}" ;
+include_path = {character - ('#' | '@' | '}' | ' ')}+ ;
+include_section = '#', identifier ;
+include_options = {space, '@', identifier, ':', value}+ ;
+
+(* ============================================================================
+   PART 7: LEXICAL ELEMENTS
+   ============================================================================ *)
+
+identifier = (letter | '_'), {letter | digit | '_' | '-'} ;
+
+letter = 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j'
+       | 'k' | 'l' | 'm' | 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't'
+       | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'
+       | 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J'
+       | 'K' | 'L' | 'M' | 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T'
+       | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z' ;
+
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;
+
+roman_numeral = 'i' | 'ii' | 'iii' | 'iv' | 'v' | 'vi' | 'vii' | 'viii' | 'ix' | 'x'
+              | 'I' | 'II' | 'III' | 'IV' | 'V' | 'VI' | 'VII' | 'VIII' | 'IX' | 'X' ;
+
+whitespace = ' ' | '\t' ;
+space = ' ' ;
+newline = '\n' | '\r\n' | '\r' ;
+backslash = '\' ;
+
+character = (* any Unicode character *) ;
+email_char = letter | digit | '.' | '-' | '_' | '+' ;
+
+EOF = (* end of file *) ;
+
+(* ============================================================================
+   PART 8: PARSING PRECEDENCE
+   ============================================================================ *)
+
+(*
+   Block parsing precedence (first pass):
+   1. Frontmatter (--- delimited at document start)
+   2. Comments (%% line, %%% block)
+   3. Code blocks (``` or ~~~ fenced)
+   4. Headings (# prefix or setext underline)
+   5. Thematic breaks (---, ***, ___)
+   6. Block quotes (> prefix)
+   7. Lists (-, *, +, 1. prefix)
+   8. Tables (| prefix)
+   9. Admonitions (::: delimited)
+   10. Paragraphs (everything else)
+
+   Inline parsing precedence (second pass):
+   1. Escaped characters (\x)
+   2. Code spans (`...`)
+   3. Autolinks (<url>)
+   4. Links and images ([text](url), ![alt](src))
+   5. Math ($...$)
+   6. Emphasis markers (/, *, _, ~, ^, ==, ,,)
+   7. Editorial markup ({+...+}, etc.)
+   8. Extensions (:type[content])
+   9. Mentions and tags (@user, #tag)
+   10. Smart typography (--, ---, etc.)
+   11. Plain text
+
+   Disambiguation rule:
+   - Prefer literal text over markup
+   - Prefer shorter spans over longer
+   - Prefer earlier opening over later
+*)
+
+(* ============================================================================
+   PART 9: SEMANTIC CONSTRAINTS (NOT EXPRESSIBLE IN PURE EBNF)
+   ============================================================================ *)
+
+(*
+   1. WORD BOUNDARIES FOR EMPHASIS
+      - Opener: delimiter must NOT be followed by whitespace
+      - Closer: delimiter must NOT be preceded by whitespace
+      - Example: "/ not italic /" is literal (whitespace after opener)
+
+   2. MATCHING FENCES
+      - Code fence closer must have same character and >= same length as opener
+      - Comment block closer must have same length as opener
+
+   3. NO SAME-TYPE NESTING
+      - /nested /italic/ here/ is invalid
+      - /nested *bold* here/ is valid
+
+   4. CAPTION PLACEMENT
+      - ^ caption must immediately follow image, blockquote, or table
+      - One blank line allowed between block and caption
+
+   5. TABLE CELL CONTENT
+      - Pipes must be escaped (\|) or inside code spans
+      - Span markers (^ <) must be sole cell content
+
+   6. REFERENCE RESOLUTION
+      - Reference links [text][ref] resolved to [ref]: url definitions
+      - Collapsed references [text][] use text as reference label
+      - Abbreviations matched at word boundaries only
+
+   7. MENTION/TAG BOUNDARIES
+      - @ and # only start mentions/tags at word boundaries
+      - email@domain.com is NOT a mention
+
+   8. SMART TYPOGRAPHY CONTEXT
+      - Only applies outside code spans/blocks
+      - Patterns must match exactly (not partial)
+*)

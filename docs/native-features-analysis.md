@@ -1,0 +1,162 @@
+# Native Features Analysis
+
+Comparing djot-php extensions with Flow's design to determine what should be native syntax vs. implementation extensions.
+
+## Criteria for Native Features
+
+A feature should be **native** (part of Flow syntax) if:
+1. It affects document semantics, not just rendering
+2. It's universally useful across contexts
+3. It has clear, unambiguous syntax
+4. It follows Flow's visual mnemonic principles
+
+A feature should remain an **extension** if:
+1. It's implementation/output-specific (HTML attributes, etc.)
+2. It's context-dependent (wiki links depend on wiki software)
+3. It integrates third-party tools (Mermaid, etc.)
+4. It's a rendering concern (permalinks, ToC generation)
+
+---
+
+## Native Features (Core Flow Syntax)
+
+### Already in Flow Spec
+
+| Feature | Flow Syntax | Status |
+|---------|-------------|--------|
+| Smart typography | `--`, `---`, `...`, quotes | ✅ In spec (4.18) |
+| @mentions | `@username` | ✅ In spec (4.19) |
+| #tags | `#tagname` | ✅ In spec (4.19) |
+| Admonitions | `::: note`, `::: warning` | ✅ In spec (4.12) |
+| Frontmatter | `---` YAML block | ✅ In spec (4.21) |
+| Footnotes | `[^ref]` | ✅ In spec (4.11) |
+| Definition lists | `:: term` / `:  definition` | ✅ In spec (4.5) |
+| Task lists | `- [ ]`, `- [x]` | ✅ In spec (4.5) |
+| Profiles | Feature restriction | ✅ In spec (4.20) |
+| Attributes | `{#id .class key=value}` | ✅ In spec (4.10) |
+| Extensions | `:type[content]{attrs}` | ✅ In spec (4.19) |
+
+### Should Add to Flow Spec
+
+| Feature | djot-php Syntax | Proposed Flow Syntax | Rationale |
+|---------|-----------------|---------------------|-----------|
+| **Captions** | `^ caption` after block | `^ caption` | Already in _djot-extra.md. Universally useful. |
+| **Abbreviations** | `*[ABBR]: expansion` | `*[ABBR]: expansion` | Essential for technical docs. |
+| **Semantic spans** | `[text]{.kbd}` → `<kbd>` | `:kbd[text]` | Use extension syntax for consistency. |
+| **Autolinks** | Bare URLs | Bare URLs auto-link | Already implied in spec (4.3). |
+| **Inline footnotes** | `[content]{.fn}` | `[^inline content]` | Already in spec, confirm syntax. |
+| **Table alignment** | `:--`, `--:`, `:--:` | Whitespace-based | Already in spec (4.8). |
+| **Rowspan/colspan** | `^` and `<` markers | `^` and `<` markers | Already in _multiline-table-proposal.md. |
+| **Multi-line cells** | `+` continuation | `+` continuation | Already in _multiline-table-proposal.md. |
+
+---
+
+## Implementation Extensions (Not Native)
+
+These should remain implementation-specific, not part of Flow syntax:
+
+| djot-php Extension | Why Not Native |
+|--------------------|----------------|
+| **ExternalLinksExtension** | HTML attribute concern (`target`, `rel`) |
+| **DefaultAttributesExtension** | Implementation convenience |
+| **HeadingPermalinksExtension** | Rendering/UI concern |
+| **TableOfContentsExtension** | Derived content, not source syntax |
+| **MermaidExtension** | Third-party tool integration |
+| **CodeGroupExtension** | UI/framework concern (tabs) |
+| **TabsExtension** | UI/framework concern |
+| **SmartQuotesExtension** | Locale config, not syntax |
+| **WikilinksExtension** | Context-dependent (wiki software) |
+| **HeadingReferenceExtension** | Implementation of `</#id>` resolution |
+
+---
+
+## Proposed Additions to Flow Spec
+
+### 1. Captions (`^`)
+
+```flow
+![Photo](image.jpg)
+^ Figure 1: A beautiful sunset
+
+> To be or not to be
+^ Shakespeare, Hamlet
+
+|= Col 1 |= Col 2 |
+| Data   | Data   |
+^ Table 1: Sample data
+```
+
+Output varies by context:
+- Images/blockquotes → `<figure>` + `<figcaption>`
+- Tables → `<caption>` element
+
+### 2. Abbreviations
+
+```flow
+The HTML spec defines WWW standards.
+
+*[HTML]: HyperText Markup Language
+*[WWW]: World Wide Web
+```
+
+- Definitions at document end (or anywhere, processed first pass)
+- Word-boundary matching only
+- Not applied inside code
+
+### 3. Semantic Inline Elements
+
+Use the extension syntax for semantic elements:
+
+```flow
+Press :kbd[Ctrl+C] to copy.
+The term :dfn[markup] means...
+:abbr[HTML]{title="HyperText Markup Language"} is a standard.
+```
+
+This fits the `:type[content]{attrs}` pattern already in the spec.
+
+### 4. Table Enhancements (from proposals)
+
+**Multi-line cells:**
+```flow
+| Name   | Description        |
+|--------|---------------------|
+| Item 1 | A long description |
++        | that continues     |
+```
+
+**Rowspan (`^`) and Colspan (`<`):**
+```flow
+| Category | Item   | Price |
+|----------|--------|-------|
+| Fruits   | Apple  | $1.00 |
+| ^        | Banana | $0.50 |
+| ^        | Orange | $0.75 |
+```
+
+```flow
+| Name  | Contact Info      | <     |
+|-------|-------------------|-------|
+| Alice | alice@example.com | x5234 |
+```
+
+---
+
+## Summary
+
+**Add to Flow native syntax:**
+1. Captions (`^`)
+2. Abbreviations (`*[ABBR]: ...`)
+3. Table multi-line (`+`), rowspan (`^`), colspan (`<`)
+
+**Already native, confirm in spec:**
+1. Semantic elements via `:type[content]` extension syntax
+2. Autolinks for bare URLs
+
+**Keep as implementation extensions:**
+- External link attributes
+- Heading permalinks
+- Table of contents generation
+- Mermaid/diagram support
+- Tabbed UI components
+- Wiki-style links (context-dependent)

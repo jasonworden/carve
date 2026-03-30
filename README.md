@@ -1,0 +1,163 @@
+# Flow
+
+A post-Djot lightweight markup language with visual mnemonics and human-centered design.
+
+> "The best markup is the one you don't have to think about."
+
+## Philosophy
+
+Flow builds on Djot's technical rigor while adding:
+
+- **Visual mnemonics** - Syntax resembles its output
+- **Human factors research** - Based on how non-technical users naturally mark up text
+- **Progressive disclosure** - Basic usage is trivial, power features exist when needed
+- **Social conventions** - `@mentions` and `#tags` work as users expect
+
+## Quick Reference
+
+````
+EMPHASIS
+  /italic/  *bold*  /*bold italic*/
+  _underline_  ~strikethrough~
+  ^super^  ,,sub,,  ==highlight==
+
+HEADINGS
+  # H1  ## H2  ### H3  #### H4
+
+LINKS & IMAGES
+  [link text](https://url.com)
+  [Page Name][]              (wiki-style)
+  ![alt text](image.jpg)
+
+CAPTIONS (images, quotes, tables)
+  ![Photo](img.jpg)
+  ^ Figure 1: Caption text
+
+LISTS
+  - unordered item
+  1. ordered item
+  - [ ] task  - [x] done
+
+CODE
+  `inline code`
+  ```language
+  code block
+  ```
+
+QUOTES & ADMONITIONS
+  > quoted text
+  ^ Attribution
+
+  ::: note
+  admonition content
+  :::
+
+TABLES
+  |= Header |= Header |      (|= for headers)
+  | Cell    | Cell    |
+  ^ Table caption
+
+  | ^       | ...     |      (^ rowspan)
+  | ...     | <       |      (< colspan)
+  + continuation      |      (+ multiline)
+
+ABBREVIATIONS
+  *[HTML]: HyperText Markup Language
+
+ATTRIBUTES
+  {#id .class key=value}
+
+EXTENSIONS
+  :youtube[VIDEO_ID]
+  @username  #tagname
+````
+
+## Design Principles
+
+Flow inherits and extends Djot's rationale:
+
+### From Djot
+
+1. **Linear parsing** - Parse in linear time with no backtracking
+2. **Local inline parsing** - No dependency on later references for syntax highlighting
+3. **Simple emphasis** - Single characters, no complex disambiguation rules
+4. **No expressive blind spots** - All outputs achievable without workarounds
+5. **Simple list indentation** - Indented content belongs to the list item
+6. **Reduced parser complexity** - No HTML recognition, entity parsing, or case-folding
+7. **Hard-wrap friendly** - Paragraph wrapping doesn't change interpretation
+8. **Uniform composition** - Content meaning consistent inside/outside containers
+9. **Arbitrary attributes** - `{#id .class key=value}` on any element
+10. **Generic containers** - Fenced divs (`:::`) for extensibility
+11. **Syntax simplicity** - One way to do things, no redundant syntax
+
+### Flow Additions
+
+12. **Visual mnemonics** - Syntax characters suggest their output:
+    - `/italic/` - slashes lean like italic text
+    - `*bold*` - asterisks are heavy/bold
+    - `_underline_` - underscore is literally underneath
+    - `~strikethrough~` - tilde resembles a line through text
+    - `^super^` - caret points up
+    - `,,sub,,` - commas pull down
+
+13. **Five-Second Rule** - Syntax should be:
+    - Learnable in 5 seconds for basic use
+    - Memorable after 5 days without use
+    - Unambiguous within 5 characters of context
+
+14. **No invisible syntax** - No trailing spaces, no significant whitespace tricks
+
+15. **Simpler tables** - `|=` marks headers (from Creole), no separator row required
+
+16. **Table spanning** - `^` for rowspan, `<` for colspan, `+` for multi-line cells
+
+17. **Captions** - `^` prefix adds captions to images, blockquotes, and tables
+
+18. **Abbreviations** - `*[ABBR]: expansion` for automatic `<abbr>` tags
+
+19. **Social integration** - `@mentions` and `#tags` work as expected from social platforms
+
+20. **Extension system** - `:type[content]{attrs}` for custom inline elements
+
+## Comparison with Djot
+
+| Feature | Djot | Flow |
+|---------|------|------|
+| Italic | `_text_` | `/text/` |
+| Bold | `*text*` | `*text*` |
+| Underline | N/A | `_text_` |
+| Links | `[text](url)` | `[text](url)` |
+| Table headers | `\|---\|` separator | `\|=` prefix |
+| Table rowspan | N/A | `^` marker |
+| Table colspan | N/A | `<` marker |
+| Captions | N/A | `^ caption` |
+| Abbreviations | N/A | `*[ABBR]: ...` |
+| Attributes | `{.class}` | `{.class}` |
+| Extensions | Fenced divs | `:type[content]{attrs}` |
+| Mentions | N/A | `@user` |
+| Tags | N/A | `#tag` |
+
+## Key Differences from Markdown
+
+- Single `*` for bold (not `**`)
+- `/italic/` visual mnemonic (not `*` or `_`)
+- `|=` table headers (no separator rows needed)
+- `^` captions for images, quotes, tables
+- `^` rowspan, `<` colspan, `+` multi-line in tables
+- Built-in abbreviations with `*[ABBR]: ...`
+- Unambiguous parsing rules
+- Built-in extension system
+
+## Status
+
+Flow is a design exploration. The specification is in `resources/casestudy_flow.md`.
+
+**File extension:** `.flow`
+
+## Influences
+
+- **Djot** (John MacFarlane) - Rigorous parsing, attributes, foundation
+- **Org-mode** - `/italic/` syntax, TODO states
+- **Creole** - `|=` table headers
+- **AsciiDoc** - Admonitions, document structure
+- **CriticMarkup** - Editorial annotations
