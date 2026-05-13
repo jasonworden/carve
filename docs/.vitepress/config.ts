@@ -4,6 +4,7 @@ import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import githubLight from 'shiki/themes/github-light.mjs'
 import githubDark from 'shiki/themes/github-dark.mjs'
+import container from 'markdown-it-container'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const carveGrammar = JSON.parse(
@@ -156,22 +157,41 @@ export default defineConfig({
     languages: [carveGrammar],
     theme: { light: carveLightTheme, dark: carveDarkTheme },
     codeTransformers: [carveStylingTransformer],
+    config(md) {
+      // Custom container for two-column "Carve | HTML" example blocks.
+      md.use(container, 'compare', {
+        render(tokens: Array<{ nesting: number }>, idx: number) {
+          return tokens[idx].nesting === 1
+            ? '<div class="carve-compare">\n'
+            : '</div>\n'
+        },
+      })
+    },
   },
 
   head: [
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/carve/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#3c8772' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'Carve' }],
     ['meta', { property: 'og:description', content: 'A post-Djot markup language with visual mnemonics.' }],
+    ['meta', { property: 'og:url', content: 'https://markup-carve.github.io/carve/' }],
+    ['meta', { property: 'og:image', content: 'https://markup-carve.github.io/carve/og-image.svg' }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Carve' }],
+    ['meta', { name: 'twitter:description', content: 'A post-Djot markup language with visual mnemonics.' }],
+    ['meta', { name: 'twitter:image', content: 'https://markup-carve.github.io/carve/og-image.svg' }],
   ],
 
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Examples', link: '/examples' },
       { text: 'Case Study', link: '/casestudy_carve' },
       {
         text: 'Reference',
         items: [
+          { text: 'Formal Grammar', link: '/grammar' },
           { text: 'Edge Cases', link: '/edge-cases' },
           { text: 'Native Features', link: '/native-features-analysis' },
           { text: 'Markup Language Comparison', link: '/markup-languages' },
@@ -185,12 +205,14 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Overview', link: '/' },
+          { text: 'Examples', link: '/examples' },
         ],
       },
       {
         text: 'Specification',
         items: [
           { text: 'Case Study', link: '/casestudy_carve' },
+          { text: 'Formal Grammar', link: '/grammar' },
         ],
       },
       {

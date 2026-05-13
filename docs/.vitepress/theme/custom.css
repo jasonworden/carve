@@ -50,3 +50,25 @@ html .vp-code span[data-carve-highlight] {
 html.dark .vp-code span[data-carve-highlight] {
   background: rgba(255, 213, 0, 0.18);
 }
+
+/*
+ * Two-column "Carve | HTML" comparison blocks. Wrap two adjacent fenced
+ * code blocks inside `::: compare` / `:::` (markdown-it-container) to
+ * render them side-by-side on wider screens, stacked on narrow.
+ */
+.carve-compare {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.carve-compare > div[class^='language-'] {
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .carve-compare {
+    grid-template-columns: 1fr;
+  }
+}
