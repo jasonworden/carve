@@ -18,9 +18,9 @@ _underline_  ~strikethrough~
 ```
 
 ```html
-<em>italic</em>  <strong>bold</strong>  <strong><em>bold italic</em></strong>
+<p><em>italic</em>  <strong>bold</strong>  <strong><em>bold italic</em></strong>
 <u>underline</u>  <s>strikethrough</s>
-<sup>super</sup>  <sub>sub</sub>  <mark>highlight</mark>
+<sup>super</sup>  <sub>sub</sub>  <mark>highlight</mark></p>
 ```
 
 :::
@@ -253,8 +253,7 @@ The HTML spec is essential reading.
 ```
 
 ```html
-<p>The <abbr title="HyperText Markup Language">HTML</abbr>
-   spec is essential reading.</p>
+<p>The <abbr title="HyperText Markup Language">HTML</abbr> spec is essential reading.</p>
 ```
 
 :::
@@ -300,9 +299,7 @@ A paragraph with [a styled link](url){.btn .primary}.
 
 ```html
 <h1 class="large" id="intro">Title</h1>
-
-<p>A paragraph with
-   <a href="url" class="btn primary">a styled link</a>.</p>
+<p>A paragraph with <a href="url" class="btn primary">a styled link</a>.</p>
 ```
 
 :::
@@ -322,14 +319,6 @@ Content begins here.
 ```
 
 ```html
-<!-- Metadata exposed to the host application,
-     not part of the rendered output:
-{
-  "title": "My Document",
-  "author": "Jane Doe",
-  "date": "2026-03-15"
-}
--->
 <p>Content begins here.</p>
 ```
 
