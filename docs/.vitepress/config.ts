@@ -186,6 +186,7 @@ export default defineConfig({
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Playground', link: '/playground' },
       { text: 'Examples', link: '/examples' },
       { text: 'Case Study', link: '/case-study/' },
       {
@@ -205,6 +206,7 @@ export default defineConfig({
         text: 'Introduction',
         items: [
           { text: 'Overview', link: '/' },
+          { text: 'Playground', link: '/playground' },
           { text: 'Examples', link: '/examples' },
         ],
       },
