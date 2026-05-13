@@ -23,6 +23,14 @@ const carveLightExtras = [
   { scope: 'markup.highlight', settings: { foreground: '#b08800', fontStyle: 'bold' } },
   { scope: 'markup.superscript', settings: { foreground: '#6f42c1' } },
   { scope: 'markup.subscript', settings: { foreground: '#6f42c1' } },
+  // Code: inline raw, fenced fences, fenced info string, fenced content.
+  // (Themes use markup.inline.raw — our scope is markup.raw.inline, so we
+  //  set our own rule rather than rely on prefix matching.)
+  { scope: 'markup.raw.inline', settings: { foreground: '#005cc5' } },
+  { scope: 'markup.raw.code', settings: { foreground: '#6a737d' } },
+  { scope: 'fenced_code.block.language', settings: { foreground: '#22863a', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.fenced', settings: { foreground: '#959da5' } },
+  { scope: 'punctuation.definition.raw', settings: { foreground: '#959da5' } },
 ]
 
 const carveDarkExtras = [
@@ -30,6 +38,11 @@ const carveDarkExtras = [
   { scope: 'markup.highlight', settings: { foreground: '#ffd33d', fontStyle: 'bold' } },
   { scope: 'markup.superscript', settings: { foreground: '#b392f0' } },
   { scope: 'markup.subscript', settings: { foreground: '#b392f0' } },
+  { scope: 'markup.raw.inline', settings: { foreground: '#79b8ff' } },
+  { scope: 'markup.raw.code', settings: { foreground: '#959da5' } },
+  { scope: 'fenced_code.block.language', settings: { foreground: '#85e89d', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.fenced', settings: { foreground: '#6a737d' } },
+  { scope: 'punctuation.definition.raw', settings: { foreground: '#6a737d' } },
 ]
 
 const carveLightTheme = {
