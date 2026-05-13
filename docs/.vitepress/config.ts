@@ -188,7 +188,6 @@ export default defineConfig({
       { text: 'Home', link: '/' },
       { text: 'Playground', link: '/playground' },
       { text: 'Examples', link: '/examples' },
-      { text: 'Case Study', link: '/case-study/' },
       {
         text: 'Reference',
         items: [
@@ -198,6 +197,7 @@ export default defineConfig({
           { text: 'Markup Language Comparison', link: '/markup-languages' },
         ],
       },
+      { text: 'Case Study', link: '/case-study/' },
       { text: 'Design Notes', link: '/dismissed-syntax' },
     ],
 
@@ -208,6 +208,15 @@ export default defineConfig({
           { text: 'Overview', link: '/' },
           { text: 'Playground', link: '/playground' },
           { text: 'Examples', link: '/examples' },
+        ],
+      },
+      {
+        text: 'Reference',
+        items: [
+          { text: 'Formal Grammar', link: '/grammar' },
+          { text: 'Edge Cases', link: '/edge-cases' },
+          { text: 'Native Features', link: '/native-features-analysis' },
+          { text: 'Markup Language Comparison', link: '/markup-languages' },
         ],
       },
       {
@@ -222,15 +231,6 @@ export default defineConfig({
           { text: 'Compatibility & Open Questions', link: '/case-study/compatibility' },
           { text: 'Implementation & Reflection', link: '/case-study/implementation' },
           { text: 'Appendices', link: '/case-study/appendices' },
-        ],
-      },
-      {
-        text: 'Reference',
-        items: [
-          { text: 'Formal Grammar', link: '/grammar' },
-          { text: 'Edge Cases', link: '/edge-cases' },
-          { text: 'Native Features', link: '/native-features-analysis' },
-          { text: 'Markup Language Comparison', link: '/markup-languages' },
         ],
       },
       {
