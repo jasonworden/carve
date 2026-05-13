@@ -17,12 +17,16 @@ const carveGrammar = JSON.parse(
 // fontStyle bit into text-decoration in its output — see the transformer
 // below for that.
 const carveLightExtras = [
+  // markup.bold.italic is a more specific path than markup.bold, so it wins
+  // over the base bold rule and combines both font styles.
+  { scope: 'markup.bold.italic', settings: { foreground: '#24292e', fontStyle: 'italic bold' } },
   { scope: 'markup.highlight', settings: { foreground: '#b08800', fontStyle: 'bold' } },
   { scope: 'markup.superscript', settings: { foreground: '#6f42c1' } },
   { scope: 'markup.subscript', settings: { foreground: '#6f42c1' } },
 ]
 
 const carveDarkExtras = [
+  { scope: 'markup.bold.italic', settings: { foreground: '#e1e4e8', fontStyle: 'italic bold' } },
   { scope: 'markup.highlight', settings: { foreground: '#ffd33d', fontStyle: 'bold' } },
   { scope: 'markup.superscript', settings: { foreground: '#b392f0' } },
   { scope: 'markup.subscript', settings: { foreground: '#b392f0' } },
