@@ -31,6 +31,32 @@ const carveLightExtras = [
   { scope: 'fenced_code.block.language', settings: { foreground: '#22863a', fontStyle: 'bold' } },
   { scope: 'punctuation.definition.fenced', settings: { foreground: '#959da5' } },
   { scope: 'punctuation.definition.raw', settings: { foreground: '#959da5' } },
+  // Lists and task checkboxes
+  { scope: ['punctuation.definition.list.unnumbered', 'punctuation.definition.list.numbered', 'punctuation.definition.list'], settings: { foreground: '#d73a49', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.checkbox', settings: { foreground: '#959da5' } },
+  { scope: 'constant.language.checkbox', settings: { foreground: '#22863a', fontStyle: 'bold' } },
+  // Tables: operators stand out, separators stay subtle
+  { scope: 'keyword.operator.table.header', settings: { foreground: '#d73a49', fontStyle: 'bold' } },
+  { scope: ['keyword.operator.table.rowspan', 'keyword.operator.table.colspan', 'keyword.operator.table.continuation'], settings: { foreground: '#e36209', fontStyle: 'bold' } },
+  { scope: 'punctuation.separator.table', settings: { foreground: '#959da5' } },
+  // Admonitions
+  { scope: 'punctuation.definition.admonition', settings: { foreground: '#d73a49', fontStyle: 'bold' } },
+  { scope: 'entity.name.tag.admonition', settings: { foreground: '#22863a', fontStyle: 'bold' } },
+  { scope: 'string.unquoted.admonition.title', settings: { foreground: '#032f62' } },
+  // Captions
+  { scope: 'punctuation.definition.caption', settings: { foreground: '#e36209', fontStyle: 'bold' } },
+  { scope: 'markup.caption', settings: { foreground: '#6a737d', fontStyle: 'italic' } },
+  // Attributes {#id .class key=value}
+  { scope: 'meta.attributes', settings: { foreground: '#e36209' } },
+  { scope: 'punctuation.definition.attributes', settings: { foreground: '#959da5' } },
+  // Mentions and tags
+  { scope: 'punctuation.definition.mention', settings: { foreground: '#d73a49' } },
+  { scope: 'variable.other.mention', settings: { foreground: '#d73a49', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.tag', settings: { foreground: '#22863a' } },
+  { scope: 'variable.other.tag', settings: { foreground: '#22863a', fontStyle: 'bold' } },
+  // Abbreviations
+  { scope: 'entity.name.abbreviation', settings: { foreground: '#005cc5', fontStyle: 'bold' } },
+  { scope: 'string.unquoted.abbreviation', settings: { foreground: '#6a737d', fontStyle: 'italic' } },
 ]
 
 const carveDarkExtras = [
@@ -43,6 +69,25 @@ const carveDarkExtras = [
   { scope: 'fenced_code.block.language', settings: { foreground: '#85e89d', fontStyle: 'bold' } },
   { scope: 'punctuation.definition.fenced', settings: { foreground: '#6a737d' } },
   { scope: 'punctuation.definition.raw', settings: { foreground: '#6a737d' } },
+  { scope: ['punctuation.definition.list.unnumbered', 'punctuation.definition.list.numbered', 'punctuation.definition.list'], settings: { foreground: '#f97583', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.checkbox', settings: { foreground: '#6a737d' } },
+  { scope: 'constant.language.checkbox', settings: { foreground: '#85e89d', fontStyle: 'bold' } },
+  { scope: 'keyword.operator.table.header', settings: { foreground: '#f97583', fontStyle: 'bold' } },
+  { scope: ['keyword.operator.table.rowspan', 'keyword.operator.table.colspan', 'keyword.operator.table.continuation'], settings: { foreground: '#ffab70', fontStyle: 'bold' } },
+  { scope: 'punctuation.separator.table', settings: { foreground: '#6a737d' } },
+  { scope: 'punctuation.definition.admonition', settings: { foreground: '#f97583', fontStyle: 'bold' } },
+  { scope: 'entity.name.tag.admonition', settings: { foreground: '#85e89d', fontStyle: 'bold' } },
+  { scope: 'string.unquoted.admonition.title', settings: { foreground: '#79b8ff' } },
+  { scope: 'punctuation.definition.caption', settings: { foreground: '#ffab70', fontStyle: 'bold' } },
+  { scope: 'markup.caption', settings: { foreground: '#959da5', fontStyle: 'italic' } },
+  { scope: 'meta.attributes', settings: { foreground: '#ffab70' } },
+  { scope: 'punctuation.definition.attributes', settings: { foreground: '#6a737d' } },
+  { scope: 'punctuation.definition.mention', settings: { foreground: '#f97583' } },
+  { scope: 'variable.other.mention', settings: { foreground: '#f97583', fontStyle: 'bold' } },
+  { scope: 'punctuation.definition.tag', settings: { foreground: '#85e89d' } },
+  { scope: 'variable.other.tag', settings: { foreground: '#85e89d', fontStyle: 'bold' } },
+  { scope: 'entity.name.abbreviation', settings: { foreground: '#79b8ff', fontStyle: 'bold' } },
+  { scope: 'string.unquoted.abbreviation', settings: { foreground: '#959da5', fontStyle: 'italic' } },
 ]
 
 const carveLightTheme = {

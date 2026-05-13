@@ -70,7 +70,8 @@ _underline_   ~strikethrough~
 ```carve
 - unordered item
 1. ordered item
-- [ ] task     - [x] done
+- [ ] task
+- [x] done
 ```
 
 ### Code
