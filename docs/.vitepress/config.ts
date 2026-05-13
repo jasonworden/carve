@@ -1,4 +1,12 @@
 import { defineConfig } from 'vitepress'
+import { readFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const carveGrammar = JSON.parse(
+  readFileSync(resolve(__dirname, './syntaxes/carve.tmLanguage.json'), 'utf8'),
+)
 
 // If the repo is published at https://markup-carve.github.io/carve/
 // keep `base: '/carve/'`. If you publish from an org page repo named
@@ -10,6 +18,10 @@ export default defineConfig({
   lang: 'en-US',
   cleanUrls: true,
   lastUpdated: true,
+
+  markdown: {
+    languages: [carveGrammar],
+  },
 
   head: [
     ['meta', { name: 'theme-color', content: '#3c8772' }],

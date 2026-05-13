@@ -33,7 +33,7 @@ features:
 
 ## Quick Reference
 
-````text
+````carve
 EMPHASIS
   /italic/  *bold*  /*bold italic*/
   _underline_  ~strikethrough~
