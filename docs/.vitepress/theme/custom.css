@@ -1,0 +1,18 @@
+/*
+ * Consume the font-style / font-weight / text-decoration custom properties
+ * that Shiki emits in dual-theme mode. Default VitePress CSS only reads the
+ * color tokens, so italic / bold / underline scopes in our Carve grammar
+ * would render with no visible effect without this.
+ */
+
+.vp-code span {
+  font-style: var(--shiki-light-font-style);
+  font-weight: var(--shiki-light-font-weight);
+  text-decoration: var(--shiki-light-text-decoration);
+}
+
+html.dark .vp-code span {
+  font-style: var(--shiki-dark-font-style);
+  font-weight: var(--shiki-dark-font-weight);
+  text-decoration: var(--shiki-dark-text-decoration);
+}

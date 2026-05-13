@@ -33,62 +33,97 @@ features:
 
 ## Quick Reference
 
+### Emphasis
+
+```carve
+/italic/   *bold*   /*bold italic*/
+_underline_   ~strikethrough~
+^super^   ,,sub,,   ==highlight==
+```
+
+### Headings
+
+```carve
+# H1
+## H2
+### H3
+#### H4
+```
+
+### Links & images
+
+```carve
+[link text](https://url.com)
+[Page Name][]              (wiki-style)
+![alt text](image.jpg)
+```
+
+### Captions (images, quotes, tables)
+
+```carve
+![Photo](img.jpg)
+^ Figure 1: Caption text
+```
+
+### Lists
+
+```carve
+- unordered item
+1. ordered item
+- [ ] task     - [x] done
+```
+
+### Code
+
 ````carve
-EMPHASIS
-  /italic/  *bold*  /*bold italic*/
-  _underline_  ~strikethrough~
-  ^super^  ,,sub,,  ==highlight==
+`inline code`
 
-HEADINGS
-  # H1  ## H2  ### H3  #### H4
-
-LINKS & IMAGES
-  [link text](https://url.com)
-  [Page Name][]              (wiki-style)
-  ![alt text](image.jpg)
-
-CAPTIONS (images, quotes, tables)
-  ![Photo](img.jpg)
-  ^ Figure 1: Caption text
-
-LISTS
-  - unordered item
-  1. ordered item
-  - [ ] task  - [x] done
-
-CODE
-  `inline code`
-  ```language
-  code block
-  ```
-
-QUOTES & ADMONITIONS
-  > quoted text
-  ^ Attribution
-
-  ::: note
-  admonition content
-  :::
-
-TABLES
-  |= Header |= Header |      (|= for headers)
-  | Cell    | Cell    |
-  ^ Table caption
-
-  | ^       | ...     |      (^ rowspan)
-  | ...     | <       |      (< colspan)
-  + continuation      |      (+ multiline)
-
-ABBREVIATIONS
-  *[HTML]: HyperText Markup Language
-
-ATTRIBUTES
-  {#id .class key=value}
-
-EXTENSIONS
-  :youtube[VIDEO_ID]
-  @username  #tagname
+```language
+code block
+```
 ````
+
+### Quotes & admonitions
+
+```carve
+> quoted text
+^ Attribution
+
+::: note
+admonition content
+:::
+```
+
+### Tables
+
+```carve
+|= Header |= Header |      (|= for headers)
+| Cell    | Cell    |
+^ Table caption
+
+| ^       | spanned |      (^ rowspan)
+| Header  | <       |      (< colspan)
++ continuation cell  |     (+ multiline)
+```
+
+### Abbreviations
+
+```carve
+*[HTML]: HyperText Markup Language
+```
+
+### Attributes
+
+```carve
+{#id .class key=value}
+```
+
+### Extensions, mentions, tags
+
+```carve
+:youtube[VIDEO_ID]
+@username   #tagname
+```
 
 ## Status
 
