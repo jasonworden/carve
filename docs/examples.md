@@ -186,7 +186,7 @@ Read [Djot](https://djot.net) for details.
   <tbody>
     <tr><td rowspan="2">Fruit</td><td>Apple</td><td>$1</td></tr>
     <tr><td>Banana</td><td>$0.50</td></tr>
-    <tr><td>Total</td><td colspan="2">$1.50</td></tr>
+    <tr><td colspan="2">Total</td><td>$1.50</td></tr>
   </tbody>
 </table>
 ```
@@ -267,8 +267,7 @@ Hey @alice, see #release-1.0.
 ```
 
 ```html
-<p>Hey <a class="mention" href="/users/alice">@alice</a>,
-   see <a class="tag" href="/tags/release-1.0">#release-1.0</a>.</p>
+<p>Hey <a class="mention" href="/users/alice">@alice</a>, see <a class="tag" href="/tags/release-1.0">#release-1.0</a>.</p>
 ```
 
 :::

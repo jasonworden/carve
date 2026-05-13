@@ -1,20 +1,5 @@
 #!/usr/bin/env node
-/*
- * Generate tests/corpus/ from docs/examples.md.
- *
- * Each `## Section name` in examples.md that is followed by a
- * `::: compare` block containing one ```carve and one ```html fence
- * becomes a pair of files:
- *
- *   tests/corpus/NN-slug.crv     ← Carve source
- *   tests/corpus/NN-slug.html    ← canonical HTML output
- *
- * These pairs are the executable spec. Any Carve implementation
- * (the reference TS one, or future ports) is expected to read each
- * .crv, produce HTML, and match the corresponding .html exactly.
- */
-
-import { readFileSync, writeFileSync, mkdirSync, rmSync } from 'node:fs'
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -36,11 +21,7 @@ let blockLines = []
 
 const finalizePair = () => {
   if (currentSection && pendingBlocks.carve && pendingBlocks.html) {
-    examples.push({
-      section: currentSection,
-      carve: pendingBlocks.carve,
-      html: pendingBlocks.html,
-    })
+    examples.push({ section: currentSection, carve: pendingBlocks.carve, html: pendingBlocks.html })
   }
   pendingBlocks = { carve: null, html: null }
 }
@@ -52,12 +33,10 @@ for (const line of lines) {
     pendingBlocks = { carve: null, html: null }
     continue
   }
-
   if (mode === 'scanning' && line.trim() === '::: compare') {
     mode = 'in_compare'
     continue
   }
-
   if (mode === 'in_compare') {
     if (line.trim() === ':::') {
       finalizePair()
@@ -73,7 +52,6 @@ for (const line of lines) {
     }
     continue
   }
-
   if (mode === 'in_fence') {
     if (line.startsWith(fenceMarker) && line.slice(fenceMarker.length).trim() === '') {
       pendingBlocks[currentLang] = blockLines.join('\n')
@@ -86,14 +64,13 @@ for (const line of lines) {
   }
 }
 
-// Clean and recreate output dir
-rmSync(outDir, { recursive: true, force: true })
 mkdirSync(outDir, { recursive: true })
+for (const f of readdirSync(outDir)) {
+  if (f.endsWith('.crv') || f.endsWith('.html')) unlinkSync(resolve(outDir, f))
+}
 
 const slugify = (s) =>
-  s.toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
+  s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
 let n = 0
 for (const ex of examples) {
@@ -105,5 +82,4 @@ for (const ex of examples) {
   writeFileSync(resolve(outDir, `${base}.html`), ex.html + '\n')
   console.log(`  ${base}.{crv,html}`)
 }
-
 console.log(`\nWrote ${examples.length} pairs to ${outDir}`)
