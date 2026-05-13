@@ -187,7 +187,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Examples', link: '/examples' },
-      { text: 'Case Study', link: '/casestudy_carve' },
+      { text: 'Case Study', link: '/case-study/' },
       {
         text: 'Reference',
         items: [
@@ -209,15 +209,23 @@ export default defineConfig({
         ],
       },
       {
-        text: 'Specification',
+        text: 'Case Study',
+        collapsed: false,
         items: [
-          { text: 'Case Study', link: '/casestudy_carve' },
-          { text: 'Formal Grammar', link: '/grammar' },
+          { text: 'Overview', link: '/case-study/' },
+          { text: 'Background', link: '/case-study/background' },
+          { text: 'Design', link: '/case-study/design' },
+          { text: 'Syntax Specification', link: '/case-study/syntax' },
+          { text: 'Parsing & AST', link: '/case-study/parsing-ast' },
+          { text: 'Compatibility & Open Questions', link: '/case-study/compatibility' },
+          { text: 'Implementation & Reflection', link: '/case-study/implementation' },
+          { text: 'Appendices', link: '/case-study/appendices' },
         ],
       },
       {
         text: 'Reference',
         items: [
+          { text: 'Formal Grammar', link: '/grammar' },
           { text: 'Edge Cases', link: '/edge-cases' },
           { text: 'Native Features', link: '/native-features-analysis' },
           { text: 'Markup Language Comparison', link: '/markup-languages' },

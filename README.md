@@ -150,7 +150,7 @@ Carve inherits and extends Djot's rationale:
 
 ## Status
 
-Carve is a design exploration. The specification is in `docs/casestudy_carve.md`.
+Carve is a design exploration. The specification lives across [`docs/case-study/`](docs/case-study/). The site renders at <https://markup-carve.github.io/carve/>.
 
 **File extension:** `.crv`
 

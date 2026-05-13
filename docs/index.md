@@ -11,7 +11,7 @@ hero:
   actions:
     - theme: brand
       text: Read the Case Study
-      link: /casestudy_carve
+      link: /case-study/
     - theme: alt
       text: View on GitHub
       link: https://github.com/markup-carve
@@ -128,7 +128,7 @@ admonition content
 
 ## Status
 
-Carve is a design exploration. The specification lives in the [Case Study](./casestudy_carve). Reference material covers [parsing edge cases](./edge-cases), [native features](./native-features-analysis), and the [broader markup landscape](./markup-languages).
+Carve is a design exploration. The specification lives in the [Case Study](./case-study/). Reference material covers [parsing edge cases](./edge-cases), [native features](./native-features-analysis), and the [broader markup landscape](./markup-languages).
 
 **File extension:** `.crv`
 
