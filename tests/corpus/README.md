@@ -1,0 +1,26 @@
+# Carve test corpus
+
+This directory contains paired `(input.crv, expected.html)` files that form the **executable spec** of Carve.
+
+Any implementation — the TypeScript reference at [`markup-carve/carve-js`](https://github.com/markup-carve/carve-js) or future ports — is expected to read each `.crv`, render it, and produce byte-identical output to the matching `.html`.
+
+## Regenerating
+
+The corpus is generated from [`../docs/examples.md`](../docs/examples.md):
+
+```sh
+npm run corpus:build
+```
+
+Each `::: compare` block in `examples.md` containing one ```` ```carve ```` and one ```` ```html ```` fence becomes one pair here. Editing the corpus directly will be overwritten on the next build — edit `examples.md` and regenerate.
+
+## Consuming the corpus from a port
+
+Most implementations will pull this directory as a git submodule:
+
+```sh
+git submodule add https://github.com/markup-carve/carve.git spec
+# then iterate over spec/tests/corpus/*.crv and assert html match
+```
+
+The corpus filenames are stable (`NN-slug.crv` / `NN-slug.html`) so test runners can list and pair them by basename.

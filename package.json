@@ -7,7 +7,8 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "corpus:build": "node scripts/generate-corpus.mjs"
   },
   "devDependencies": {
     "markdown-it-container": "^4.0.0",
