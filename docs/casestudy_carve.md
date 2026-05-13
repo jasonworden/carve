@@ -1,4 +1,4 @@
-# Flow: A Case Study in Post-Djot Markup Design
+# Carve: A Case Study in Post-Djot Markup Design
 
 ## Part 1: The Landscape of Lightweight Markup
 
@@ -233,7 +233,7 @@ A good syntax should be:
 
 ---
 
-## Part 3: Flow Design Principles
+## Part 3: Carve Design Principles
 
 ### 3.1 Core Principles
 
@@ -255,7 +255,7 @@ A good syntax should be:
 
 ---
 
-## Part 4: Flow Syntax Specification
+## Part 4: Carve Syntax Specification
 
 ### 4.1 Document Structure
 
@@ -878,7 +878,7 @@ Useful for:
 ```
 {{ path/to/file.md }}
 {{ path/to/file.md#section-id }}
-{{ ./snippet.flow @indent:2 }}
+{{ ./snippet.crv @indent:2 }}
 ```
 
 ### 4.17 Math
@@ -958,7 +958,7 @@ defines how browsers render <abbr title="World Wide Web">WWW</abbr> content.</p>
 
 ### 4.20 Extensions (Custom Elements)
 
-Flow needs a generic extension mechanism for domain-specific elements that
+Carve needs a generic extension mechanism for domain-specific elements that
 don't belong in core (embeds, mentions, custom widgets, etc.).
 
 #### Inline Extensions: `:name[content]{attrs}`
@@ -1061,7 +1061,7 @@ This ensures documents remain readable even without all extensions.
 Processors may allow defining extensions:
 
 ```yaml
-# flow.config.yaml
+# carve.config.yaml
 extensions:
   mywidget:
     type: block
@@ -1071,7 +1071,7 @@ extensions:
 
 Or via code:
 ```javascript
-flow.registerExtension('youtube', {
+carve.registerExtension('youtube', {
   inline: (id, attrs) => `<iframe src="https://youtube.com/embed/${id}"></iframe>`,
   block: (id, attrs, content) => { /* render block version */ }
 });
@@ -1255,12 +1255,12 @@ $converter = new DjotConverter(
 
 ### 4.22 File Extension
 
-Flow documents use the `.flow` extension:
+Carve documents use the `.crv` extension:
 
 ```
-document.flow
-README.flow
-notes.flow
+document.crv
+README.crv
+notes.crv
 ```
 
 ### 4.23 Frontmatter (Metadata Only)
@@ -1391,12 +1391,12 @@ position: {
 
 ```
 ---
-flow-compat: markdown
+carve-compat: markdown
 ---
 ```
 
 Modes:
-- `strict` - Only Flow syntax (default)
+- `strict` - Only Carve syntax (default)
 - `markdown` - Accept Markdown syntax with warnings
 - `djot` - Accept Djot syntax with warnings
 
@@ -1414,7 +1414,7 @@ Line 23: Single-asterisk emphasis *text* detected
 ### 7.3 Auto-Migration Tool
 
 ```bash
-flow migrate input.md --from markdown --to flow > output.flow
+carve migrate input.md --from markdown --to carve > output.crv
 ```
 
 ---
@@ -1423,7 +1423,7 @@ flow migrate input.md --from markdown --to flow > output.flow
 
 ### 8.1 Syntax Comparison
 
-| Feature          | Markdown    | Djot        | rST           | AsciiDoc     | Org         | Flow         |
+| Feature          | Markdown    | Djot        | rST           | AsciiDoc     | Org         | Carve         |
 |------------------|-------------|-------------|---------------|--------------|-------------|--------------|
 | Italic           | `*t*`/`_t_` | `_t_`       | `*t*`         | `_t_`        | `/t/`       | `/t/`        |
 | Bold             | `**t**`     | `*t*`       | `**t**`       | `*t*`        | `*t*`       | `*t*`        |
@@ -1442,7 +1442,7 @@ flow migrate input.md --from markdown --to flow > output.flow
 |-----------|-------|--------|-------|---------|
 | Gemtext   | 100%  | 100%   | 100%  | 100%    |
 | Markdown  | 60%   | 80%    | 90%   | Never*  |
-| Flow      | 70%   | 90%    | 95%   | 98%     |
+| Carve      | 70%   | 90%    | 95%   | 98%     |
 | Djot      | 50%   | 85%    | 95%   | 98%     |
 | AsciiDoc  | 40%   | 70%    | 85%   | 95%     |
 | rST       | 30%   | 60%    | 80%   | 95%     |
@@ -1489,7 +1489,7 @@ flow migrate input.md --from markdown --to flow > output.flow
 
 **Option B:** `_italic_`, `*bold*` (like Djot)
 - Pro: Familiar to Djot/AsciiDoc users
-- Con: `_` underscore used for underline in Flow
+- Con: `_` underscore used for underline in Carve
 
 **Option C:** `~italic~`, `*bold*`, `-underline-`
 - Pro: Different associations
@@ -1544,7 +1544,7 @@ How complex should tables get?
 
 ```
 ---
-flow-version: 1.0
+carve-version: 1.0
 ---
 ```
 
@@ -1572,9 +1572,9 @@ Djot is technically excellent but:
 - Link syntax unchanged from Markdown
 - No visual mnemonics for emphasis
 
-### 11.3 Why Flow Is Needed
+### 11.3 Why Carve Is Needed
 
-Flow takes Djot's technical rigor and adds:
+Carve takes Djot's technical rigor and adds:
 - User research-driven syntax choices
 - Visual mnemonics throughout
 - Natural language-aligned patterns
@@ -1584,7 +1584,7 @@ Flow takes Djot's technical rigor and adds:
 
 ## Part 12: Conclusion
 
-### 12.1 Flow's Key Innovations
+### 12.1 Carve's Key Innovations
 
 1. **Visual Mnemonics**: `/slant/` for italic, `*heavy*` for bold
 2. **Simpler Tables**: `|=` headers, no separator rows needed
@@ -1595,7 +1595,7 @@ Flow takes Djot's technical rigor and adds:
 
 ### 12.2 Success Metrics
 
-Flow succeeds if:
+Carve succeeds if:
 - Non-technical users can write without consulting docs
 - Technical users can access full power when needed
 - Documents remain readable as plain text
@@ -1622,8 +1622,8 @@ with diverse users would be essential before finalizing syntax decisions.*
 
 ## Appendix A: Quick Reference Card
 
-```
-FLOW QUICK REFERENCE
+````
+CARVE QUICK REFERENCE
 
 EMPHASIS
   /italic/  *bold*  /*bold italic*/
@@ -1697,31 +1697,31 @@ EDITORIAL (CriticMarkup)
   {# comment #}
 
 ---   (horizontal rule)
-```
+````
 
 ## Appendix B: Example Document
 
-```flow
+````carve
 ---
-title: Flow Example Document
+title: Carve Example Document
 author: Jane Writer
 date: 2024-03-15
 ---
 
-# Welcome to Flow
+# Welcome to Carve
 
-This is a /simple/ demonstration of *Flow* markup.
+This is a /simple/ demonstration of *Carve* markup.
 
 ## Features
 
-Flow includes:
+Carve includes:
 
 1. Visual emphasis with /italics/ and *bold*
 2. Easy tables without separator rows
 3. Standard [link syntax](https://example.com) with full tooling support
 
-::: tip "Getting Started"
-Just write naturally and let Flow handle the rest.
+::: tip Getting Started
+Just write naturally and let Carve handle the rest.
 :::
 
 ### Sample Table
@@ -1735,7 +1735,7 @@ Just write naturally and let Flow handle the rest.
 
 ```python
 def greet(name: str) -> str:
-    """Greet someone with Flow."""
+    """Greet someone with Carve."""
     return f"Hello, {name}!"
 ```
 
@@ -1744,14 +1744,14 @@ def greet(name: str) -> str:
 > The best markup is the one you don't have to think about.
 > -- Anonymous
 
-For more info, see the [documentation](https://flow-markup.example.org).
+For more info, see the [documentation](https://github.com/markup-carve).
 
 [^This is a footnote with inline definition.]
-```
+````
 
 ## Appendix C: Influences and Acknowledgments
 
-Flow draws inspiration from:
+Carve draws inspiration from:
 
 - **Djot** (John MacFarlane) - Rigorous parsing, attributes
 - **Org-mode** (Carsten Dominik) - `/italic/` syntax, TODO states

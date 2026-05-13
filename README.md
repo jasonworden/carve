@@ -1,4 +1,4 @@
-# Flow
+# Carve
 
 A post-Djot lightweight markup language with visual mnemonics and human-centered design.
 
@@ -6,7 +6,7 @@ A post-Djot lightweight markup language with visual mnemonics and human-centered
 
 ## Philosophy
 
-Flow builds on Djot's technical rigor while adding:
+Carve builds on Djot's technical rigor while adding:
 
 - **Visual mnemonics** - Syntax resembles its output
 - **Human factors research** - Based on how non-technical users naturally mark up text
@@ -74,7 +74,7 @@ EXTENSIONS
 
 ## Design Principles
 
-Flow inherits and extends Djot's rationale:
+Carve inherits and extends Djot's rationale:
 
 ### From Djot
 
@@ -90,7 +90,7 @@ Flow inherits and extends Djot's rationale:
 10. **Generic containers** - Fenced divs (`:::`) for extensibility
 11. **Syntax simplicity** - One way to do things, no redundant syntax
 
-### Flow Additions
+### Carve Additions
 
 12. **Visual mnemonics** - Syntax characters suggest their output:
     - `/italic/` - slashes lean like italic text
@@ -121,7 +121,7 @@ Flow inherits and extends Djot's rationale:
 
 ## Comparison with Djot
 
-| Feature | Djot | Flow |
+| Feature | Djot | Carve |
 |---------|------|------|
 | Italic | `_text_` | `/text/` |
 | Bold | `*text*` | `*text*` |
@@ -150,9 +150,9 @@ Flow inherits and extends Djot's rationale:
 
 ## Status
 
-Flow is a design exploration. The specification is in `resources/casestudy_flow.md`.
+Carve is a design exploration. The specification is in `docs/casestudy_carve.md`.
 
-**File extension:** `.flow`
+**File extension:** `.crv`
 
 ## Influences
 

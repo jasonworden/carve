@@ -1,6 +1,6 @@
-# Flow Edge Cases Analysis
+# Carve Edge Cases Analysis
 
-This document analyzes potentially ambiguous or tricky parsing scenarios in Flow syntax.
+This document analyzes potentially ambiguous or tricky parsing scenarios in Carve syntax.
 
 ---
 
@@ -17,7 +17,7 @@ This document analyzes potentially ambiguous or tricky parsing scenarios in Flow
 
 **Recommendation:** Use code fencing for paths - they're code anyway:
 
-```flow
+```carve
 The config is in `/etc/nginx/nginx.conf` for setup.
 Use /italic/ for emphasis.
 ```
@@ -51,7 +51,7 @@ The `^` character has three meanings:
 3. **Superscript:** `^text^` inline with content on both sides
 
 **Examples:**
-```flow
+```carve
 x^2^ + y^2^ = z^2^           # Superscript
 
 | Category | Item   |
@@ -64,7 +64,7 @@ The answer is ^ 42.            # Literal ^ (no closing ^)
 ```
 
 **Edge case - table cell with just `^2^`:**
-```flow
+```carve
 | Value |
 | ^2^   |
 ```
@@ -87,7 +87,7 @@ This is superscript "2" in a cell, not rowspan, because `^2^` is a complete supe
 4. **Literal:** Everything else
 
 **Examples:**
-```flow
+```carve
 | Header | <       |           # Colspan
 
 <https://example.com>          # Autolink
@@ -114,7 +114,7 @@ if (x < 5)                     # Literal <
 4. **Literal:** Standalone `*` or escaped `\*`
 
 **Examples:**
-```flow
+```carve
 * List item                    # List
 *bold text*                    # Bold
 *[HTML]: HyperText...          # Abbreviation
@@ -122,7 +122,7 @@ if (x < 5)                     # Literal <
 ```
 
 **Edge case - bold at line start:**
-```flow
+```carve
 *This whole line is bold*
 *This is also bold, no closing needed
 ```
@@ -166,7 +166,7 @@ List requires `* ` (asterisk + space). Bold opener requires `*` + non-whitespace
 2. **Tag:** `#` preceded by whitespace or start of inline content, followed by alphanumeric
 
 **Examples:**
-```flow
+```carve
 # Heading 1                    # Heading
 
 Check out #project-x           # Tag
@@ -182,7 +182,7 @@ Issue #123                     # Tag (or could be literal, configurable)
 
 **Problem:** `*[` could start bold with a link inside.
 
-```flow
+```carve
 *[HTML]: HyperText Markup Language    # Abbreviation definition
 *[link text](url)* more text          # Bold containing a link
 ```
@@ -192,7 +192,7 @@ Issue #123                     # Tag (or could be literal, configurable)
 2. **Bold with link:** `*[` inline, link syntax inside, closed with `*`
 
 **Examples:**
-```flow
+```carve
 *[HTML]: HyperText Markup Language
 # → Abbreviation (line start, ]: pattern)
 
@@ -206,7 +206,7 @@ See *[the docs](url) for more* info
 
 **Rule:** Same-type nesting is invalid. Different-type nesting is valid.
 
-```flow
+```carve
 /This /does not/ nest/         # Invalid - ambiguous
 /This *does* nest/             # Valid: italic with bold inside
 *Bold with /italic/ inside*    # Valid
@@ -221,7 +221,7 @@ See *[the docs](url) for more* info
 
 **Problem:** Pipes and other characters in cell content.
 
-```flow
+```carve
 | Command | Description |
 | `ls | grep foo` | Filter output |
 | Price | $50 \| $100 |
@@ -247,7 +247,7 @@ See *[the docs](url) for more* info
 - Use more `%` to nest: `%%%%` can contain `%%%`
 
 **Examples:**
-```flow
+```carve
 %% This is a comment
 
 Text with 50%% is not a comment (not at line start).
@@ -263,11 +263,11 @@ Block comment with %% inside is fine.
 
 ## 11. Code Blocks Override Everything
 
-Content inside code spans and code blocks is **never** parsed for Flow syntax.
+Content inside code spans and code blocks is **never** parsed for Carve syntax.
 
-~~~flow
+~~~carve
 ```python
-# This is not a Flow heading
+# This is not a Carve heading
 *this* is not bold
 /path/to/file is just text
 ```
@@ -286,7 +286,7 @@ Inline `*not bold*` and `/not/italic/` are literal.
 2. Must **immediately follow** an image, blockquote, or table
 3. Blank line allowed between block and caption (for readability)
 
-```flow
+```carve
 ![Photo](img.jpg)
 ^ This is a caption
 
@@ -305,7 +305,7 @@ Some other text
 
 **Problem:** `+` is also a list marker.
 
-```flow
+```carve
 + List item                    # List (+ at line start, space, content)
 
 | Cell |
@@ -322,7 +322,7 @@ Some other text
 
 Backslash escapes any ASCII punctuation:
 
-```flow
+```carve
 \*literal asterisks\*
 \/not italic\/
 \@not-a-mention
@@ -331,7 +331,7 @@ Backslash escapes any ASCII punctuation:
 ```
 
 Inside code spans, backslash is literal:
-```flow
+```carve
 `\*still has backslash\*`
 ```
 
@@ -354,7 +354,7 @@ Inside code spans, backslash is literal:
 
 ## 16. Empty/Whitespace-Only Elements
 
-```flow
+```carve
 **               # Not bold (no content)
 //               # Not italic (no content between //)
 ^^               # Not superscript

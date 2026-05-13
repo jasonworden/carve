@@ -1,14 +1,14 @@
 # Native Features Analysis
 
-Comparing djot-php extensions with Flow's design to determine what should be native syntax vs. implementation extensions.
+Comparing djot-php extensions with Carve's design to determine what should be native syntax vs. implementation extensions.
 
 ## Criteria for Native Features
 
-A feature should be **native** (part of Flow syntax) if:
+A feature should be **native** (part of Carve syntax) if:
 1. It affects document semantics, not just rendering
 2. It's universally useful across contexts
 3. It has clear, unambiguous syntax
-4. It follows Flow's visual mnemonic principles
+4. It follows Carve's visual mnemonic principles
 
 A feature should remain an **extension** if:
 1. It's implementation/output-specific (HTML attributes, etc.)
@@ -18,11 +18,11 @@ A feature should remain an **extension** if:
 
 ---
 
-## Native Features (Core Flow Syntax)
+## Native Features (Core Carve Syntax)
 
-### Already in Flow Spec
+### Already in Carve Spec
 
-| Feature | Flow Syntax | Status |
+| Feature | Carve Syntax | Status |
 |---------|-------------|--------|
 | Smart typography | `--`, `---`, `...`, quotes | ✅ In spec (4.18) |
 | @mentions | `@username` | ✅ In spec (4.19) |
@@ -36,9 +36,9 @@ A feature should remain an **extension** if:
 | Attributes | `{#id .class key=value}` | ✅ In spec (4.10) |
 | Extensions | `:type[content]{attrs}` | ✅ In spec (4.19) |
 
-### Should Add to Flow Spec
+### Should Add to Carve Spec
 
-| Feature | djot-php Syntax | Proposed Flow Syntax | Rationale |
+| Feature | djot-php Syntax | Proposed Carve Syntax | Rationale |
 |---------|-----------------|---------------------|-----------|
 | **Captions** | `^ caption` after block | `^ caption` | Already in _djot-extra.md. Universally useful. |
 | **Abbreviations** | `*[ABBR]: expansion` | `*[ABBR]: expansion` | Essential for technical docs. |
@@ -53,7 +53,7 @@ A feature should remain an **extension** if:
 
 ## Implementation Extensions (Not Native)
 
-These should remain implementation-specific, not part of Flow syntax:
+These should remain implementation-specific, not part of Carve syntax:
 
 | djot-php Extension | Why Not Native |
 |--------------------|----------------|
@@ -70,11 +70,11 @@ These should remain implementation-specific, not part of Flow syntax:
 
 ---
 
-## Proposed Additions to Flow Spec
+## Proposed Additions to Carve Spec
 
 ### 1. Captions (`^`)
 
-```flow
+```carve
 ![Photo](image.jpg)
 ^ Figure 1: A beautiful sunset
 
@@ -92,7 +92,7 @@ Output varies by context:
 
 ### 2. Abbreviations
 
-```flow
+```carve
 The HTML spec defines WWW standards.
 
 *[HTML]: HyperText Markup Language
@@ -107,7 +107,7 @@ The HTML spec defines WWW standards.
 
 Use the extension syntax for semantic elements:
 
-```flow
+```carve
 Press :kbd[Ctrl+C] to copy.
 The term :dfn[markup] means...
 :abbr[HTML]{title="HyperText Markup Language"} is a standard.
@@ -118,7 +118,7 @@ This fits the `:type[content]{attrs}` pattern already in the spec.
 ### 4. Table Enhancements (from proposals)
 
 **Multi-line cells:**
-```flow
+```carve
 | Name   | Description        |
 |--------|---------------------|
 | Item 1 | A long description |
@@ -126,7 +126,7 @@ This fits the `:type[content]{attrs}` pattern already in the spec.
 ```
 
 **Rowspan (`^`) and Colspan (`<`):**
-```flow
+```carve
 | Category | Item   | Price |
 |----------|--------|-------|
 | Fruits   | Apple  | $1.00 |
@@ -134,7 +134,7 @@ This fits the `:type[content]{attrs}` pattern already in the spec.
 | ^        | Orange | $0.75 |
 ```
 
-```flow
+```carve
 | Name  | Contact Info      | <     |
 |-------|-------------------|-------|
 | Alice | alice@example.com | x5234 |
@@ -144,7 +144,7 @@ This fits the `:type[content]{attrs}` pattern already in the spec.
 
 ## Summary
 
-**Add to Flow native syntax:**
+**Add to Carve native syntax:**
 1. Captions (`^`)
 2. Abbreviations (`*[ABBR]: ...`)
 3. Table multi-line (`+`), rowspan (`^`), colspan (`<`)

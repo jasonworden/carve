@@ -1,6 +1,6 @@
 # Dismissed Syntax Ideas
 
-Ideas that were considered during Flow's design but ultimately rejected. Documented here for historical context and to explain why certain paths weren't taken.
+Ideas that were considered during Carve's design but ultimately rejected. Documented here for historical context and to explain why certain paths weren't taken.
 
 ---
 
@@ -264,7 +264,7 @@ Most rejected ideas fall into these categories:
 3. **Scope creep** - Features that belong in separate tools (templating, rendering)
 4. **Visual mnemonic violation** - Syntax that doesn't visually suggest its meaning
 
-Flow prioritizes:
+Carve prioritizes:
 - Unambiguous parsing
 - Visual mnemonics where possible
 - Ecosystem compatibility where it doesn't compromise clarity

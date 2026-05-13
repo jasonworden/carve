@@ -1,0 +1,105 @@
+---
+layout: home
+
+hero:
+  name: Carve
+  text: A post-Djot markup language
+  tagline: Visual mnemonics, human-centered design — markup you can feel.
+  image:
+    src: /logo.svg
+    alt: Carve logo
+  actions:
+    - theme: brand
+      text: Read the Case Study
+      link: /casestudy_carve
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/markup-carve
+
+features:
+  - title: Visual Mnemonics
+    details: "/italic/ slashes lean, *bold* asterisks are heavy, _underline_ sits below, ~strikethrough~ runs through. Syntax that looks like its output."
+  - title: Post-Djot Rigor
+    details: Inherits Djot's linear-time parsing, no backtracking, unambiguous rules — extended with captions, abbreviations, and social conventions.
+  - title: Five-Second Rule
+    details: Learnable in 5 seconds for basic use. Memorable after 5 days without practice. Unambiguous within 5 characters of context.
+  - title: Captions Everywhere
+    details: One ^ prefix adds captions to images, blockquotes, and tables — emitting semantic figure / figcaption / caption HTML.
+  - title: Friendly Tables
+    details: "|= for headers, ^ for rowspan, < for colspan, + for multi-line cells. No separator row required."
+  - title: Built-in Extensions
+    details: ":type[content]{attrs} for keyboard hints, semantic spans, video embeds. @mentions and #tags as you'd expect from social platforms."
+---
+
+## Quick Reference
+
+````text
+EMPHASIS
+  /italic/  *bold*  /*bold italic*/
+  _underline_  ~strikethrough~
+  ^super^  ,,sub,,  ==highlight==
+
+HEADINGS
+  # H1  ## H2  ### H3  #### H4
+
+LINKS & IMAGES
+  [link text](https://url.com)
+  [Page Name][]              (wiki-style)
+  ![alt text](image.jpg)
+
+CAPTIONS (images, quotes, tables)
+  ![Photo](img.jpg)
+  ^ Figure 1: Caption text
+
+LISTS
+  - unordered item
+  1. ordered item
+  - [ ] task  - [x] done
+
+CODE
+  `inline code`
+  ```language
+  code block
+  ```
+
+QUOTES & ADMONITIONS
+  > quoted text
+  ^ Attribution
+
+  ::: note
+  admonition content
+  :::
+
+TABLES
+  |= Header |= Header |      (|= for headers)
+  | Cell    | Cell    |
+  ^ Table caption
+
+  | ^       | ...     |      (^ rowspan)
+  | ...     | <       |      (< colspan)
+  + continuation      |      (+ multiline)
+
+ABBREVIATIONS
+  *[HTML]: HyperText Markup Language
+
+ATTRIBUTES
+  {#id .class key=value}
+
+EXTENSIONS
+  :youtube[VIDEO_ID]
+  @username  #tagname
+````
+
+## Status
+
+Carve is a design exploration. The specification lives in the [Case Study](./casestudy_carve). Reference material covers [parsing edge cases](./edge-cases), [native features](./native-features-analysis), and the [broader markup landscape](./markup-languages).
+
+**File extension:** `.crv`
+
+## Influences
+
+- **[Djot](https://djot.net/)** (John MacFarlane) — rigorous parsing, attributes, foundation
+- **Org-mode** — `/italic/` syntax, TODO states
+- **Creole** — `|=` table headers
+- **AsciiDoc** — admonitions, document structure
+- **CriticMarkup** — editorial annotations
