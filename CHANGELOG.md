@@ -59,7 +59,7 @@ advance to `0.1.0` together as the first lockstep minor release.
   boolean attributes `{disabled}` (renders as `name=""`); strict identifier
   rule (digit-first or non-identifier chars make the whole block literal)
 - **Editorial / critic markup** - `{+ +}` insert, `{- -}` delete,
-  `{~ old~> new ~}` substitute, `{= =}` comment, `{# #}` highlight
+  `{~ old~>new ~}` substitute, `{= =}` highlight, `{# #}` comment
 - **Frontmatter** - YAML frontmatter block at document start; safe loader
   (no arbitrary object instantiation)
 - **Comments** - `%%` whole-line, `text %% trailing`, `%%%` block comment
