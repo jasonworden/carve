@@ -50,9 +50,9 @@ advance to `0.1.0` together as the first lockstep minor release.
   inline `^[...]` footnote
 - **Math** - `` $`...` `` inline math, `` $$`...` `` display math (djot form)
 - **Admonitions** - `::: type` two-tier fenced divs: eight canonical types
-  (`note`, `tip`, `info`, `warning`, `caution`, `details`, `spoiler`,
-  `line-block`) render to `<aside class="type">`; custom type words render to
-  `<div class="type">`
+  (`note`, `tip`, `info`, `warning`, `danger`, `success`, `example`, `quote`)
+  render to `<aside class="admonition type">`; any other type word renders to a
+  generic `<div class="type">`
 - **Generic divs and spans** - bare `:::` / `::: {attrs}` for plain `<div>`;
   `[text]{attrs}` inline span; `:::` nesting with matching closer length rule
 - **Attributes** - `{#id .class key=value}` on any block or inline element;
@@ -65,7 +65,6 @@ advance to `0.1.0` together as the first lockstep minor release.
 - **Comments** - `%%` whole-line, `text %% trailing`, `%%%` block comment
 - **Raw blocks and inline** - ` ```=format ` raw block, `` `code`{=format} ``
   raw inline; safe-passthrough mode required for untrusted input
-- **Includes** - `{{ path/to/file }}` file inclusion
 - **Abbreviations** - `*[ABBR]: expansion` for automatic `<abbr>` tags
 - **Smart typography** - straight quotes to curly quotes, `--` en-dash,
   `---` em-dash, `...` ellipsis; locale-aware quote sets (Tier-2 when configured)
@@ -92,8 +91,9 @@ advance to `0.1.0` together as the first lockstep minor release.
   CSL-JSON bibliography source named in frontmatter
 - **Code callouts** - `<n>` markers inside fenced code blocks bound to an
   explanation list below the block
-- **Bibliography block** - `::: references` placeholder populated from
-  resolved citation keys with mandated numeric output and back-links
+- **Bibliography** - supplying a CSL-JSON pool to the citations extension
+  renders a cite-ordered reference list with mandated numeric output and
+  back-links (no separate block construct; driven by the citations pool)
 - **Glossary** - `::: glossary` definition list whose terms become
   `<dt id="gloss-{slug}">` entries; `:term[word]` inline links to the entry
 - **Index** - invisible `:index[term]` markers collected into a sorted
@@ -131,4 +131,4 @@ advance to `0.1.0` together as the first lockstep minor release.
   content strip bidi-override/isolate controls (removed, not entity-escaped, to
   prevent round-trip reintroduction)
 
-[0.1.0]: https://github.com/markup-carve/carve/releases/tag/v0.1.0
+[0.1.0]: https://github.com/markup-carve/carve/releases/tag/0.1.0
