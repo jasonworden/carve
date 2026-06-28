@@ -163,7 +163,7 @@ export default defineConfig({
   lang: 'en-US',
   // README.md is a GitHub-facing orientation file for people browsing the
   // docs/ source on GitHub; it is not a site page.
-  srcExclude: ['README.md'],
+  srcExclude: ['README.md', 'superpowers/**'],
   cleanUrls: true,
   lastUpdated: true,
 

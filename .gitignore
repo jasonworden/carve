@@ -12,3 +12,6 @@ docs/superpowers/
 
 # Claude Code local artifacts
 .claude/
+
+# Local scratch screenshots (browser-mcp / docs proofs)
+screenshots/
