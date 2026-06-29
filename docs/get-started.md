@@ -64,7 +64,7 @@ composer require markup-carve/carve-php
 ```
 
 ```php
-use Carve\CarveConverter;
+use MarkupCarve\Carve\CarveConverter;
 
 $html = (new CarveConverter())->convert('/italic/, *bold*, and a heading');
 ```

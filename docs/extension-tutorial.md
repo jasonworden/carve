@@ -266,10 +266,10 @@ const html = carveToHtml(source, { extensions: [qr] })
 ```
 
 ```php [carve-php]
-use Carve\CarveConverter;
-use Carve\Event\RenderEvent;
-use Carve\Extension\ExtensionInterface;
-use Carve\Node\Block\CodeBlock;
+use MarkupCarve\Carve\CarveConverter;
+use MarkupCarve\Carve\Event\RenderEvent;
+use MarkupCarve\Carve\Extension\ExtensionInterface;
+use MarkupCarve\Carve\Node\Block\CodeBlock;
 
 final class QrExtension implements ExtensionInterface
 {
