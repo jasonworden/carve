@@ -3,6 +3,8 @@ import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { withBase } from 'vitepress'
 // @ts-expect-error - vendored ESM module without TS resolution context
 import { carveToHtml } from '../../carve-lib/index.js'
+// @ts-expect-error - vendored ESM module without TS resolution context
+import { markdownToCarve } from '../../carve-lib/markdown-migrate.js'
 // @ts-expect-error - local ESM helper without TS resolution context
 import { carveExtensions } from '../../carve-extensions.js'
 // @ts-expect-error - local ESM helper without TS resolution context
@@ -25,6 +27,15 @@ const PHP_SANDBOX_URL = 'https://sandbox.dereuromark.de/sandbox/carve'
 
 const source = ref(DEFAULT_SOURCE)
 const fullscreen = ref(false)
+
+// Convert pasted Markdown into Carve, straight into the editor - a quick
+// "migrate from Markdown" demo powered by carve-js's markdownToCarve.
+function importMarkdown(): void {
+  const md = window.prompt('Paste Markdown to convert to Carve:')
+  if (md && md.trim()) {
+    source.value = markdownToCarve(md)
+  }
+}
 
 // --- Engine selection: JS (default, in-page) or Rust/WASM (in-page, lazy). ---
 type Engine = 'js' | 'rust'
@@ -437,6 +448,7 @@ void mermaidInit
       </div>
       <div class="pg-toolbar-right">
         <span class="pg-status" aria-live="polite">{{ renderStatus }}</span>
+        <button class="pg-btn" type="button" @click="importMarkdown">Import Markdown</button>
         <button class="pg-btn" type="button" @click="toggleFullscreen">
           {{ fullscreen ? 'Exit full screen (Esc)' : 'Full screen' }}
         </button>
