@@ -342,11 +342,11 @@ Guidelines:
 
 ## Status
 
-Carve is a design exploration. The specification lives across [`docs/case-study/`](docs/case-study/). The site renders at <https://markup-carve.github.io/carve/>.
+Carve is a design exploration. The site renders at <https://markup-carve.github.io/carve/>.
 
 **File extension:** `.crv`
 
-Maintaining the spec ↔ carve-js ↔ carve-php lockstep, and the list of known cross-implementation divergences, are documented in [`MAINTAINING.md`](MAINTAINING.md).
+Maintaining the spec ↔ carve-* lockstep, and the list of known cross-implementation divergences, are documented in [`MAINTAINING.md`](MAINTAINING.md).
 
 ## Influences
 
