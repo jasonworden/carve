@@ -348,6 +348,8 @@ Carve is a design exploration. The site renders at <https://markup-carve.github.
 
 Maintaining the spec ↔ carve-* lockstep, and the list of known cross-implementation divergences, are documented in [`MAINTAINING.md`](MAINTAINING.md).
 
+For full overview see https://github.com/markup-carve#projects
+
 ## Influences
 
 - **Djot** (John MacFarlane) - Rigorous parsing, attributes, foundation
