@@ -123,8 +123,8 @@ ATTRIBUTES
   {#id .class key=value}
 
 EXTENSIONS
-  :youtube[VIDEO_ID]
   @username  #tagname
+  :youtube[VIDEO_ID]
 
 COMMENTS
   %% whole-line comment

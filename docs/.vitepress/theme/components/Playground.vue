@@ -28,13 +28,26 @@ const PHP_SANDBOX_URL = 'https://sandbox.dereuromark.de/sandbox/carve'
 const source = ref(DEFAULT_SOURCE)
 const fullscreen = ref(false)
 
-// Convert pasted Markdown into Carve, straight into the editor - a quick
-// "migrate from Markdown" demo powered by carve-js's markdownToCarve.
-function importMarkdown(): void {
-  const md = window.prompt('Paste Markdown to convert to Carve:')
-  if (md && md.trim()) {
-    source.value = markdownToCarve(md)
-  }
+// Import from Markdown: open a paste dialog, then markdownToCarve() rewrites
+// the pasted Markdown into Carve and replaces the source (so it flows through
+// the normal render pipeline). A modal keeps multi-line paste usable and never
+// disrupts the toolbar/grid.
+const showImport = ref(false)
+const importText = ref('')
+const importEl = ref<HTMLTextAreaElement | null>(null)
+
+function openImport(): void {
+  importText.value = ''
+  showImport.value = true
+  void nextTick(() => importEl.value?.focus())
+}
+function cancelImport(): void {
+  showImport.value = false
+}
+function confirmImport(): void {
+  source.value = markdownToCarve(importText.value)
+  showImport.value = false
+  void nextTick(() => sourceEl.value?.focus())
 }
 
 // --- Engine selection: JS (default, in-page) or Rust/WASM (in-page, lazy). ---
@@ -407,7 +420,9 @@ function toggleFullscreen(): void {
   fullscreen.value = !fullscreen.value
 }
 function onKeydown(e: KeyboardEvent): void {
-  if (e.key === 'Escape' && fullscreen.value) fullscreen.value = false
+  if (e.key !== 'Escape') return
+  if (showImport.value) { showImport.value = false; return }
+  if (fullscreen.value) fullscreen.value = false
 }
 // Avoid an "unused" warning while keeping the flag meaningful to tooling.
 void mermaidInit
@@ -447,8 +462,9 @@ void mermaidInit
         </a>
       </div>
       <div class="pg-toolbar-right">
-        <span class="pg-status" aria-live="polite">{{ renderStatus }}</span>
-        <button class="pg-btn" type="button" @click="importMarkdown">Import Markdown</button>
+        <button class="pg-btn pg-import" type="button" @click="openImport">
+          Import Markdown
+        </button>
         <button class="pg-btn" type="button" @click="toggleFullscreen">
           {{ fullscreen ? 'Exit full screen (Esc)' : 'Full screen' }}
         </button>
@@ -475,8 +491,30 @@ void mermaidInit
         />
       </div>
       <div class="pane pane-full">
-        <label>HTML source</label>
+        <div class="pane-label-row">
+          <label>HTML source</label>
+          <span class="pg-status" aria-live="polite">{{ renderStatus }}</span>
+        </div>
         <pre class="raw">{{ html }}</pre>
+      </div>
+    </div>
+
+    <div v-if="showImport" class="pg-modal-backdrop" @click.self="cancelImport">
+      <div class="pg-modal" role="dialog" aria-modal="true" aria-label="Import Markdown">
+        <label for="pg-import-text">Paste Markdown to convert to Carve</label>
+        <textarea
+          id="pg-import-text"
+          ref="importEl"
+          v-model="importText"
+          spellcheck="false"
+          placeholder="# Hello&#10;&#10;Paste your **Markdown** here…"
+        />
+        <div class="pg-modal-actions">
+          <button class="pg-btn" type="button" @click="cancelImport">Cancel</button>
+          <button class="pg-btn pg-btn-primary" type="button" @click="confirmImport">
+            Convert &amp; replace
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -556,6 +594,68 @@ void mermaidInit
 .pg-btn:hover {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-brand-1);
+}
+.pg-btn-primary {
+  background: var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
+  color: var(--vp-c-white, #fff);
+}
+.pg-btn-primary:hover {
+  background: var(--vp-c-brand-2);
+  border-color: var(--vp-c-brand-2);
+  color: var(--vp-c-white, #fff);
+}
+/* HTML-source pane header: label on the left, live render status on the
+   right. Moving the status here frees the toolbar so Import Markdown fits
+   beside Full screen. */
+.pane-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.pg-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.45);
+}
+.pg-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: min(640px, 100%);
+  padding: 1.1rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 12px;
+  background: var(--vp-c-bg);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+.pg-modal label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--vp-c-text-2);
+}
+.pg-modal textarea {
+  width: 100%;
+  min-height: 240px;
+  padding: 0.6rem;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  background: var(--vp-c-bg-soft);
+  color: var(--vp-c-text-1);
+  font-family: var(--vp-font-family-mono);
+  font-size: 0.82rem;
+  resize: vertical;
+}
+.pg-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
 }
 .pg-grid {
   display: grid;
