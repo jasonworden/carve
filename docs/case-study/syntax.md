@@ -111,7 +111,11 @@ heading text by the following algorithm, applied in order:
    `{#id}` values are reserved first (verbatim, case preserved), in
    document order; generated IDs are reserved as headings are processed.
    The first use is kept bare; each later collision takes the next
-   numeric suffix (`-2`, `-3`).
+   numeric suffix (`-2`, `-3`), skipping suffix candidates that are
+   already reserved. Extension-generated ids (tabs `tabset-N`, code
+   groups `codegroup-N`, citation anchors `cite-{key}-{n}`, ...) join
+   this same namespace and deduplicate with the same mechanism - see
+   the [extensions contract, section 2.6](/extensions).
 
 | Heading | Identifier |
 |---|---|

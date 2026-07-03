@@ -268,6 +268,27 @@ blocks as source; they do not call `renderStatic`.
 Parity: for a given `(input, mode, renderers)` the implementations MUST produce
 the same output - a static-mode parity battery, mirroring the profile fixtures.
 
+### 2.6 Generated ids share the document id namespace
+
+Extensions that mint DOM ids - tabs (`tabset-N`, `tabset-N-tab-M`,
+`tabset-N-panel-M`), code groups (the `codegroup-N` family), citations
+(`cite-{key}-{n}` back-link anchors, `ref-{key}` entries), and any future
+generator - MUST reserve those ids in the same document id namespace as
+explicit `{#id}` attributes and generated heading ids, and MUST deduplicate
+against it with the mechanism headings use: the first use keeps the base name,
+each collision takes the next free numeric suffix (`base-2`, `base-3`),
+skipping candidates that are already reserved
+([syntax.md 4.1, identifier step 7](/case-study/syntax#_4-1-document-structure);
+`grammar.ebnf` PART 9 §13).
+
+Both collision directions are covered: an explicit `{#tabset-1}` anywhere in
+the document reserves the name before generation (the first tab set is bumped),
+and a heading such as `# tabset 1` or `# cite foo 1` competes in document order
+like any other generated id. Without this rule a duplicate DOM id is invalid
+HTML and `label for=` / `getElementById` / anchor navigation silently resolve
+to the first occurrence, breaking either the anchor or the widget wiring.
+Implementations MUST agree here or cross-implementation anchors drift.
+
 ## 3. Home, conformance, per-impl
 
 - This document is the normative home for the taxonomy + contract.
