@@ -21,7 +21,7 @@ the bar for "a Carve implementation" is **Tier-1 core** (native syntax) - see
 
 ## Language bindings
 
-Higher-level bindings and satellite packages that wrap one of the reference implementations.
+Higher-level bindings and satellite packages that wrap one of the engine implementations.
 
 | Project | Language | Notes |
 |---|---|---|

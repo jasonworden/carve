@@ -205,7 +205,7 @@ Check out https://example.com for more.
 
 **Decision:** Bare URLs are **not** auto-linked. Use the angle-bracket
 autolink `<https://example.com>` for an explicit link. (This aligns the
-spec with djot and the reference implementations.)
+spec with djot and the engine implementations.)
 
 ---
 

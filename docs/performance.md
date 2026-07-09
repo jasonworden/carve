@@ -1,6 +1,6 @@
 # Performance
 
-Where the three reference implementations stand on raw HTML-rendering
+Where the three engine implementations stand on raw HTML-rendering
 throughput, and how they compare to their Markdown / CommonMark / Djot
 counterparts in the same language.
 

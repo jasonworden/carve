@@ -71,7 +71,7 @@
    THIS LAYER. Indentation, container prefixes, and lazy continuation are 2D
    properties no string grammar can express (they need column arithmetic and
    carried container state); L0 states them as a deterministic one-pass line
-   automaton instead of prose. The three reference implementations realize
+   automaton instead of prose. The three engine implementations realize
    this automaton literally.
 
    INPUT.  Lines, split on newline ('\n' | '\r\n'). Column arithmetic is

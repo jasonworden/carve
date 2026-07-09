@@ -117,9 +117,9 @@ Override those paths with `CARVE_RS_DIR`, `CARVE_JS_DIR`, and `CARVE_PHP_DIR`.
 The documented snapshot used:
 
 ```bash
-CARVE_RS_DIR=/media/mark/data/work/git/carve-rs \
-CARVE_JS_DIR=/media/mark/data/work/git/carve-js \
-CARVE_PHP_DIR=/media/mark/data/work/git/carve-php \
+CARVE_RS_DIR=../carve-rs \
+CARVE_JS_DIR=../carve-js \
+CARVE_PHP_DIR=../carve-php \
 node scripts/compare-impls.mjs
 ```
 

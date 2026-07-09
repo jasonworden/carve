@@ -20,7 +20,7 @@ const JS_EXTENSIONS = carveExtensions()
 // loaded as raw Carve source via vite-plugin-carve.
 import { source as DEFAULT_SOURCE } from '../../examples/demo.crv'
 
-// Hosted sandbox for the PHP reference implementation (carve-php). PHP cannot
+// Hosted sandbox for the PHP implementation (carve-php). PHP cannot
 // run in the browser, so this engine opens out to the sandbox instead of
 // rendering in-page like the JS and Rust engines.
 const PHP_SANDBOX_URL = 'https://sandbox.dereuromark.de/sandbox/carve'

@@ -6,8 +6,8 @@
 // file (trailing-newline-insensitive). See docs/profiles.md.
 require getenv('CARVE_PHP_AUTOLOAD') ?: 'vendor/autoload.php';
 
-use Carve\CarveConverter;
-use Carve\Profile;
+use MarkupCarve\Carve\CarveConverter;
+use MarkupCarve\Carve\Profile;
 
 // name => [carve input, profile factory closure, profile id string for impls]
 $cases = [
