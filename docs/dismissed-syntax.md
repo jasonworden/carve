@@ -326,6 +326,60 @@ addressing, the higher-ROI path is a lint/warning on a line-leading `#Word`
 
 ---
 
+## Links: Slack-style `<url|title>` labeled autolinks
+
+**Proposed (Slack mrkdwn form):**
+```
+See <https://docs.example.com|the documentation> for more.
+```
+
+**Rationale for proposal:**
+- Compact single-token feel: paste the URL first, add the label after a pipe
+- Reuses the angle-bracket slot that autolinks already occupy
+- Familiar to anyone writing Slack bots or mrkdwn messages
+
+**Considerations:**
+- **Duplicate of `[title](url)`.** Slack only has this form because mrkdwn has
+  no bracket-parenthesis links; Carve does. A second spelling for the same
+  construct violates "one syntax, one meaning". (Slack's own docs call their
+  format explicitly *not* Markdown.)
+- **The false-positive surface explodes.** Today a `<` fails FAST: the autolink
+  body is url-characters only (no spaces), so `a < b`, `List<T>` and HTML
+  samples resolve as literal text immediately. Allowing a spaced title turns
+  any prose `< ... | ... >` into a link candidate: `cat <input|sort >out`
+  (shell pipes!), `<(foo|bar)>` (regex alternation), `x < y|z > w`. All literal
+  today; all silent links under the proposal.
+- **Spaces end the token property.** With a spaced title, `<...>` is no longer
+  a scannable token but a delimited span - so which `>` closes
+  `<url|a > b>`? Either answer needs a new escaping context (`\>` inside
+  titles) in a construct designed to never need one.
+- **Architectural collision with tables.** The cell splitter runs at block
+  level (two-phase model, PART 8) and splits on unescaped `|` outside code
+  spans; `| <u|t> |` tears the link across two cells. Fixing that would make
+  the block phase understand inline-link internals. Escaping does not help:
+  destinations have no escape processing (normative), so `<u\|t>` puts a
+  literal backslash into the URL.
+- **Breaks an existing security invariant.** The angle form currently
+  guarantees display text = destination (`<http://evil.com>` can only show
+  where it goes). `<evil.com|paypal.com>` reintroduces text-vs-target phishing
+  in the one link syntax that was immune on sight.
+- **Breaking change to existing documents.** `</#a|b>` parses today as a
+  cross-reference with id `a|b` (crossref ids allow the pipe); pipe-as-title
+  would silently change the meaning of valid current documents.
+- **Fail-fast parsing dies.** Every `<` in prose would need a scan to end of
+  line hunting `|...>` before conceding "literal" - unbounded lookahead on one
+  of the most common prose characters, instead of aborting at the first space.
+- **Degenerate-case tax.** `<|title>`, `<url|>`, `<a||b>`, nested
+  `<u1|see <u2>>` - each needs a rule, a corpus pin and three implementations,
+  to buy a duplicate feature.
+
+**Decision:** Rejected as input syntax. Slack mrkdwn remains interesting as an
+OUTPUT target instead: a `carveToSlack` renderer maps naturally (`*bold*` and
+`~strike~` are even identical) and links become `<url|title>` on the way out,
+where none of the above conflicts exist.
+
+---
+
 ## Summary
 
 Most rejected ideas fall into these categories:
