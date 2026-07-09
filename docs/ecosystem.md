@@ -38,9 +38,9 @@ Syntax highlighting, structural editing, and diagnostics inside editors.
 | Project | Target | Status |
 |---|---|---|
 | [vscode-carve](https://github.com/markup-carve/vscode-carve) | VS Code | Highlighting, snippets, live preview. |
-| [emacs-carve](https://github.com/markup-carve/emacs-carve) | Emacs | Major mode for `.crv`/`.carve` files. |
+| [emacs-carve](https://github.com/markup-carve/emacs-carve) | Emacs | Major mode for `.crv` files. |
 | [vim-carve](https://github.com/markup-carve/vim-carve) | Vim / Neovim | Syntax highlighting + tree-sitter grammar. |
-| [sublime-carve](https://github.com/markup-carve/sublime-carve) | Sublime Text | Syntax package for `.crv`/`.carve`. |
+| [sublime-carve](https://github.com/markup-carve/sublime-carve) | Sublime Text | Syntax package for `.crv` files. |
 | [helix-carve](https://github.com/markup-carve/helix-carve) | Helix | Editor support for Carve. |
 | [intellij-carve](https://github.com/markup-carve/intellij-carve) | JetBrains IDEs | Highlighting, live preview, and export for IntelliJ, PhpStorm, etc. |
 | [zed-carve](https://github.com/markup-carve/zed-carve) | Zed | Editor support. |
@@ -53,15 +53,15 @@ Carve embedded in another tool or framework.
 
 | Project | Host | Status |
 |---|---|---|
-| [mkdocs-carve](https://github.com/markup-carve/mkdocs-carve) | MkDocs | Plugin: renders `.crv`/`.carve` pages in MkDocs documentation sites. |
-| [jekyll-carve](https://github.com/markup-carve/jekyll-carve) | Jekyll | Converter plugin for `.crv`/`.carve` pages. |
+| [mkdocs-carve](https://github.com/markup-carve/mkdocs-carve) | MkDocs | Plugin: renders `.crv` pages in MkDocs documentation sites. |
+| [jekyll-carve](https://github.com/markup-carve/jekyll-carve) | Jekyll | Converter plugin for `.crv` pages. |
 | [eleventy-carve](https://github.com/markup-carve/eleventy-carve) | Eleventy (11ty) | Plugin for processing Carve source files. |
-| [astro-carve](https://github.com/markup-carve/astro-carve) | Astro | Integration for importing `.carve`/`.crv` pages. |
+| [astro-carve](https://github.com/markup-carve/astro-carve) | Astro | Integration for importing `.crv` pages. |
 | [symfony-carve](https://github.com/markup-carve/symfony-carve) | Symfony | Bundle to render Carve markup to HTML via carve-php. |
 | [symfony-carve-demo](https://github.com/markup-carve/symfony-carve-demo) | Symfony | Demo app showcasing the symfony-carve bundle. |
 | [wp-carve](https://github.com/markup-carve/wp-carve) | WordPress | Plugin on the carve-php engine - live preview, multi-format paste, REST API. |
 | [carve-grammars](https://github.com/markup-carve/carve-grammars) | Tiptap | Editor kit and Carve serializer. |
-| [vite-plugin-carve](https://github.com/markup-carve/vite-plugin-carve) | Vite | Import `.carve` / `.crv` documents as rendered HTML. *Early.* |
+| [vite-plugin-carve](https://github.com/markup-carve/vite-plugin-carve) | Vite | Import `.crv` documents as rendered HTML. *Early.* |
 
 ## Resources
 
