@@ -44,8 +44,11 @@ const impls = [
           '/topics/{name}',
         ]
       }
-      if (feature === 'emoji-map') {
-        return ['cargo', 'run', '--quiet', '--', '--emoji', 'rocket=🚀', '--emoji', 'tada=🎉']
+      if (feature === 'symbol-map') {
+        return [
+          'cargo', 'run', '--quiet', '--',
+          '--symbol', 'rocket=🚀', '--symbol', 'tada=🎉', '--symbol', 'UPPER=⬆️',
+        ]
       }
       return null
     },
@@ -90,7 +93,7 @@ const impls = [
           `,
         ]
       }
-      if (feature === 'emoji-map') {
+      if (feature === 'symbol-map') {
         return [
           'node',
           '--input-type=module',
@@ -100,7 +103,7 @@ const impls = [
             import { carveToHtml } from './dist/index.js';
             const source = readFileSync(process.argv[1], 'utf8');
             process.stdout.write(carveToHtml(source, {
-              emoji: { rocket: '🚀', tada: '🎉' },
+              symbols: { rocket: '🚀', tada: '🎉', UPPER: '⬆️' },
             }));
           `,
         ]

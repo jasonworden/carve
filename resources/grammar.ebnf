@@ -805,6 +805,7 @@ inline_element = escaped_char
                | editorial_markup
                | mention
                | tag
+               | symbol
                | smart_typography
                | inline_comment
                | hard_break
@@ -1291,14 +1292,53 @@ name_word = (letter | digit | '_' | '-')+ ;
    89-mention-and-tag-name-boundaries / 31-mention-ignores-email-addresses. *)
 
 (* Boundary rules (PSEUDO-PRODUCTIONS -- prose conditions on `mention` /
-   `tag`, normative in PART 9 §7, not reachable grammar symbols):
-   must be preceded by whitespace or start of content *)
-mention_boundary = (* @name must have word boundary before @ *) ;
-tag_boundary = (* #name must have word boundary before # *) ;
+   `tag` / `symbol`, normative in PART 9 §7, not reachable grammar symbols):
+   the marker must be at start of content or preceded by a character that is
+   NOT a word character ([A-Za-z0-9_]). Whitespace qualifies, but so does any
+   punctuation: `(@user)` is a mention, `x=@user` is a mention; `a@b` is not.
+   The same guard applies to `#tag` and `:symbol:`. *)
+mention_boundary = (* @name: no word character directly before @ *) ;
+tag_boundary = (* #name: no word character directly before # *) ;
+symbol_boundary = (* :name:: no word character directly before the opening
+   ':' -- `a:b:c` and `10:30:` stay literal text; `(:tada:)` is a symbol *) ;
+
+(* --- Symbols --- *)
+(* A symbol is a generic named inline placeholder with NO built-in semantics:
+   the parser only records the name. Resolution is processor configuration:
+   (1) a registered inline-renderer extension handler for symbol nodes wins,
+   (2) else the renderer `symbols` map (name -> replacement, emitted RAW in
+   the target format -- processor config is trusted, same class as the
+   `renderers` map), (3) else the literal text `:name:` (escaped). Emoji
+   substitution is the common use, not a language feature. Profiles may
+   strip or force-literal symbols ("symbol" is the construct name in
+   profile allowlists).
+   ATTRIBUTES -- NORMATIVE: a trailing `{...}` attribute block attaches to
+   the symbol; in HTML output attributes force a `<span>` wrapper around the
+   resolved (or literal) output so they have an element to land on:
+   `:rocket:{.big}` -> `<span class="big">🚀</span>` (mapped) /
+   `<span class="big">:rocket:</span>` (unmapped). Without attributes no
+   wrapper is emitted. *)
+symbol = ':', symbol_name, ':', [attributes] ;
+symbol_name = (letter | digit | '+' | '-'), {letter | digit | '_' | '+' | '-'} ;
+(* The FIRST name character is a letter, a digit, `+` or `-`, so the reaction
+   shortcodes `:+1:` / `:-1:` parse (they are the most common ones in the
+   wild). It may NOT be `_`: `:_x_:` would otherwise steal from underline
+   (`:` + `_x_` + `:`), and no real shortcode needs a leading underscore --
+   so `:_x:` stays literal text. No whitespace, no second colon inside. The
+   inline extension `:type[...]` is tried first; `:kbd[Ctrl]` never parses
+   as a symbol because the name run must be closed by ':'.
+
+   PRECEDENCE vs SMART TYPOGRAPHY -- NORMATIVE: a symbol is recognized BEFORE
+   the typographic replacements (PART 9 §8), so a name made of typographic
+   punctuation is a symbol, not a substitution: `:+-:` is the symbol `+-`
+   (NOT `:` + ± + `:`), and `:--:` is the symbol `--` (NOT an en dash between
+   colons). The typographic forms still apply everywhere a symbol does not
+   open -- `a +- b` is `a ± b`, and `word:+-:` (no boundary, so no symbol)
+   is `word:±:`. Pinned by the corpus (Symbols section). *)
 
 (* --- Smart Typography --- *)
 smart_typography = em_dash | en_dash | ellipsis | smart_quote
-                 | arrow | comparison | symbol ;
+                 | arrow | comparison | typographic_symbol ;
 (* NOTE: fractions are deliberately NOT converted (PART 9 §8 / dismissed-
    syntax.md) -- `1/2` collides with dates (`1/2/2024`) and paths. *)
 
@@ -1330,7 +1370,10 @@ smart_quote = '"' | "'" ;
 
 arrow = "->" | "<-" | "<->" | "=>" ;
 comparison = "!=" | "<=" | ">=" ;
-symbol = "(c)" | "(r)" | "(tm)" | "+-" ;
+(* NOT the `:name:` symbol above -- these are the fixed typographic
+   replacements (© ® ™ ±). Named `typographic_symbol` so the two do not
+   collide: `symbol` is the `:name:` placeholder (PART 9 §7). *)
+typographic_symbol = "(c)" | "(r)" | "(tm)" | "+-" ;
 
 (* --- Breaks --- *)
 hard_break = '\', newline ;  (* backslash at end of line *)

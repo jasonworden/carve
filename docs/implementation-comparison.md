@@ -47,9 +47,13 @@ reported as skipped, not failures.
 | Feature | Rust | JS | PHP |
 |---------|------|----|-----|
 | Social link templates | pass | pass | pass |
-| Emoji map | pass | pass | skipped |
+| Symbol map | pass | pass | skipped¹ |
 | German smart quotes | skipped | skipped | pass |
 | Bare URL autolink | skipped | skipped | pass |
+
+¹ PHP is adopting the canonical name shape, word-boundary guard, attribute
+wrapper and a `symbols` render map (carve#258 Step 4); until it lands the
+optional `symbol-map` case stays skipped for PHP. Rust and JS both pass.
 
 | Implementation | Optional pass | Skipped | Mismatches | Errors | Avg CLI ms/file |
 |----------------|---------------|---------|------------|--------|-----------------|
@@ -158,7 +162,7 @@ cross_impl_diffs=0
 
 Optional feature coverage
 social-link-templates: rust, js, php
-emoji-map: rust, js
+symbol-map: rust, js
 smart-quotes-locale-de: php
 bare-url-autolink: php
 ```
