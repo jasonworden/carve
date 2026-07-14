@@ -12,7 +12,7 @@ tags: [demo, reference]
 # Carve Feature Demo
 
 A single document touching every core construct, plus a few renderer-dependent
-extensions at the end. Open it with **Carve: Open Preview** to see it rendered.
+extensions at the end.
 
 {#headings .featured}
 ## Headings and attributes
