@@ -3,7 +3,8 @@
 Carve starts from [Djot](https://djot.net) - John MacFarlane's predictable,
 backtracking-free reimagining of Markdown - and keeps almost all of it: the
 linear parse model, generic containers, arbitrary attributes, footnotes, math,
-definition lists, and smart typography all carry over unchanged.
+and smart typography all carry over unchanged. Definition lists are one of the
+deliberate breaks (see section 9 below).
 
 So why diverge at all? Because a handful of Djot's choices optimize for
 "Markdown-compatible" over "unambiguous to author and read." Carve is willing to
@@ -241,6 +242,61 @@ Carve tightens two things djot leaves loose:
 Attributes on a symbol (`:rocket:{.big}`) are pinned to render a `<span>`
 wrapper in HTML so the attributes have a target.
 
+## 9. Definition lists use explicit markers
+
+Djot definition lists are indentation-scoped: a single-colon term line, a blank
+line, then an indented body that can be arbitrarily rich - multiple
+blank-separated paragraphs, nested blocks, and so on.
+
+```
+: term
+
+  First paragraph of the definition.
+
+  Second paragraph.
+```
+
+Carve keeps the rich body but replaces the indentation-scoped syntax with
+explicit markers:
+
+- A **term** is a line starting with `:: ` (double colon).
+- A **definition** is a line starting with `:  ` (single colon, then two
+  spaces).
+
+```
+:: color
+:: colour
+:  The visual property of objects.
+:  A pigment or paint.
+```
+
+```
+<dl>
+  <dt>color</dt>
+  <dt>colour</dt>
+  <dd>The visual property of objects.</dd>
+  <dd>A pigment or paint.</dd>
+</dl>
+```
+
+A definition **continues exactly like a list item**, so a `<dd>` is not limited
+to a single block: a blank line then an indented block folds in (form A), and a
+lone `+` attaches the following flush-left block with no indentation (form B,
+the same continuation marker lists and block quotes use). So multi-paragraph
+definitions are supported - the divergence is the *markers*, not the capability:
+
+```
+:: term
+:  First paragraph.
++
+Second, flush-left paragraph joined with +.
+```
+
+The two syntaxes are mutually incompatible: Djot deflist source parses as a
+plain paragraph in Carve, and vice versa. The trade is deliberate - unambiguous
+line markers over indentation-scoped looseness, matching how Carve treats the
+double-colon as a term and reserves three colons for a div/admonition.
+
 ## What Carve adds on top (not breaks)
 
 These aren't divergences - Djot has no equivalent - but they're why Carve exists
@@ -280,6 +336,10 @@ Most Djot source needs only mechanical changes:
 6. A marker line (`- `, `> `, `# `, a table row, a fence) directly under a line
    of prose now starts a block. Where you relied on Djot keeping it in the
    paragraph, add a blank line or escape the marker.
+7. Definition lists: rewrite `: term` (+ indented body) as `:: term` then
+   `:  definition`. A multi-paragraph Djot `<dd>` carries over - a Carve
+   definition continues like a list item (indent a block after a blank line, or
+   use a lone `+`; see section 9).
 
 The bundled `markdownToCarve` helper and Djot migration warnings flag most of
 these automatically.
