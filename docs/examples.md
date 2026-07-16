@@ -3361,8 +3361,39 @@ wraps onto the next line</dt>
 
 A definition list also does **not** interrupt a paragraph - a `::` line
 directly under prose folds into that paragraph, so a list needs a blank line
-before it. A definition (`<dd>`) ends at a blank line that is not followed by an
-indented continuation, at a new `::` / `:  ` marker, or at a block opener.
+before it.
+
+A blank line may separate a term from its definition (or one definition from
+the next) for readability - a following `:  ` line still attaches to the entry:
+
+::: compare
+
+```carve
+:: term
+
+:  the definition
+```
+
+```html
+<dl>
+  <dt>term</dt>
+  <dd>the definition</dd>
+</dl>
+```
+
+:::
+
+A definition (`<dd>`) ends at a blank line that is followed by neither an
+indented continuation nor a `:  ` definition, at a new `::` term, or at a block
+opener.
+
+Attributes attach to the **whole `<dl>`** via a preceding block-attribute line
+(`{.class}` on the line before the first `:: term`). There is deliberately no
+per-`<dt>` / per-`<dd>` attribute form: unlike a list item (`-{.c}`) or a table
+row (`| … |{.c}`), a term or definition takes no glued marker attributes. Style
+individual terms/definitions with CSS descendant selectors (`dl.gloss dt`), or
+put the attributes on the `<dl>`. This matches djot, which also has no per-item
+definition-list attributes.
 
 ## Comments
 
