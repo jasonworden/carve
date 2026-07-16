@@ -3392,8 +3392,7 @@ Attributes attach to the **whole `<dl>`** via a preceding block-attribute line
 per-`<dt>` / per-`<dd>` attribute form: unlike a list item (`-{.c}`) or a table
 row (`| … |{.c}`), a term or definition takes no glued marker attributes. Style
 individual terms/definitions with CSS descendant selectors (`dl.gloss dt`), or
-put the attributes on the `<dl>`. This matches djot, which also has no per-item
-definition-list attributes.
+put the attributes on the `<dl>`.
 
 ## Comments
 
