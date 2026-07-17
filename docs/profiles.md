@@ -11,8 +11,8 @@ conformance corpus. This page is therefore the **normative contract**: every
 implementation MUST expose the same node-type vocabulary, the same resolution
 rule, the same four presets, and the same link-policy semantics, so a given
 profile produces the same allow/deny decision in `carve-js`, `carve-php`, and
-`carve-rs`. `carve-php` is the reference; cross-impl parity is verified by golden
-fixtures, not the corpus.
+`carve-rs`. `carve-php` is the reference for profile golden fixtures; cross-impl
+parity is verified by those fixtures, not the corpus.
 
 ## Node-type vocabulary (normative)
 
@@ -108,6 +108,7 @@ User comments: basic formatting, `nofollow`/`ugc` links.
 - `allowedBlock`: `paragraph`, `list`, `list_item`, `block_quote`, `code_block`.
 - `linkPolicy`: unrestricted + `rel` attributes `nofollow ugc`.
 - `maxNesting`: `4`.
+- `maxLength`: `100000` (100 KB) input-size cap; override via `setMaxLength(0)` to disable.
 - (So: no headings, images, tables, footnotes, divs/sections, def-lists,
   thematic breaks, line blocks, spans, symbols, math, abbreviations, raw HTML.)
 
@@ -119,6 +120,7 @@ Chat/micro-posts: non-destructive inline formatting, paragraphs and lists.
   **no** `image`.)
 - `allowedBlock`: `paragraph`, `list`, `list_item`.
 - `maxNesting`: `2`.
+- `maxLength`: `10000` (10 KB) input-size cap; override via `setMaxLength(0)` to disable.
 
 ## Link policy
 
