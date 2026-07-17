@@ -239,12 +239,13 @@ CarveCore {
   extName    = identStart identRest*
   extContent = (escape | (~"]" ~newline any))*
 
-  // An attributed symbol shortcode `:name:{...}` wraps in a <span> in Full
-  // Carve (a resolved/literal body carrying the attributes). Core has no
-  // symbol node to attach attributes to, so it refuses this form (out of
-  // subset). A bare `:name:` with no attribute block is unaffected and
-  // stays literal text.
-  symbolAttr = ":" shortcodeName ":" &attrs
+  // An attributed symbol shortcode `:name:{...}` wraps in a <span> carrying
+  // the attribute block. Core has no symbol map, so an UNMAPPED symbol resolves
+  // to its literal text `:name:` as the span body (the same fallback as the
+  // bare `shortcode` form). The attribute block is CONSUMED here so it attaches
+  // to this span rather than the surrounding text. A bare `:name:` with no
+  // attribute block stays literal text (see `shortcode`).
+  symbolAttr = ":" shortcodeName ":" attrs
   // An UNattributed `:name:` shortcode. Core has no symbol map, so it renders
   // literally -- but it must still be CONSUMED as one token, or its inner
   // characters would fall through to smart typography (`:+-:` would become

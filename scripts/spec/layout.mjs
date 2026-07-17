@@ -396,21 +396,34 @@ function parseBlocks(lines, state, top, inItem = false) {
       const label = m[1]
       const bodyLines = [m[2]]
       i++
+      // `pullPending` is set by a `+` marker: the NEXT flush-left line begins a
+      // pulled-in block (SS17 L4). It is a distinct signal from an empty body
+      // line, so an empty note (`[^a]:`) never swallows the following block.
+      let pullPending = false
       // indented continuation (>= 2 spaces), single blank lines allowed
       while (i < n) {
         if (/^ {2,}\S/.test(lines[i])) {
           bodyLines.push(lines[i].replace(/^ {2}/, ''))
+          pullPending = false
           i++
         } else if (isBlank(lines[i]) && /^ {2,}\S/.test(lines[i + 1] ?? '')) {
           bodyLines.push('')
           i++
         } else if (CONT_MARKER.test(lines[i] ?? '')) {
-          // A `+` pull-left block joins the note (SS17). The attached block is
-          // a full block, outside the executable subset's footnote model here -
-          // refuse rather than approximate (the corpus pins the real output).
-          // Checked BEFORE lazy continuation, which would otherwise swallow the
-          // bare `+` as paragraph text.
-          throw new Refuse('`+` continuation in a footnote definition')
+          // A `+` pull-left block joins the note (SS17 L4): the following
+          // flush-left block folds into the note's <li> as a new block. The
+          // blank separator lets parseBlocks start it fresh. Checked BEFORE
+          // lazy continuation, which would otherwise swallow the bare `+` as
+          // paragraph text.
+          bodyLines.push('')
+          pullPending = true
+          i++
+        } else if (pullPending && !isBlank(lines[i] ?? '')) {
+          // the whole flush-left block pulled in by the preceding `+` marker
+          const end = takePulledBlockEnd(lines, i)
+          for (let k = i; k < end; k++) bodyLines.push(lines[k])
+          pullPending = false
+          i = end
         } else if (
           !isBlank(lines[i] ?? '') &&
           bodyLines[bodyLines.length - 1] !== '' &&
@@ -528,75 +541,109 @@ function parseBlocks(lines, state, top, inItem = false) {
     // --- definition lists (:: term / :  def) ---
     if (/^::?[ ]/.test(line) && !/^:::/.test(line)) {
       const node = { t: 'deflist', items: [] }
+      // A plain line that folds (as a lazy continuation) into an open term or
+      // the open paragraph of a definition (SS17): not blank, not a visible
+      // block, not a definition/list/fence/caption opener.
+      const foldablePlain = (cur) =>
+        !isBlank(cur) &&
+        !startsVisibleBlock(cur) &&
+        !LINK_DEF.test(cur) &&
+        !FOOTNOTE_DEF.test(cur) &&
+        !ABBR_DEF.test(cur) &&
+        !BULLET.test(cur) &&
+        !ORDERED.test(cur) &&
+        !FENCE.test(cur) &&
+        !CAPTION.test(cur)
+      const isEntry = (s) => /^::?[ ]/.test(s) && !/^:::/.test(s)
       while (i < n) {
+        const cur0 = lines[i] ?? ''
         let dm
-        if ((dm = /^:: (.*)$/.exec(lines[i] ?? ''))) node.items.push({ dt: dm[1].trim() })
-        else if ((dm = /^: {2}(.*)$/.exec(lines[i] ?? ''))) {
-          // FIRST-BLOCK (`:  +`): the body is the following flush-left block, a
-          // block-bodied dd the inline-only subset cannot represent - refuse
-          // (the corpus pins the real output). `:  \+` stays a literal `+`.
-          if (CONT_MARKER.test(dm[1].trim())) {
-            throw new Refuse('first-block definition (`:  +`, block-bodied dd)')
+        if ((dm = /^:: (.*)$/.exec(cur0))) {
+          // term (dt): folds plain wrapped continuation lines like a heading so
+          // a wrapped term line does not strand its definition.
+          let dt = dm[1].trim()
+          i++
+          while (i < n) {
+            const cur = lines[i] ?? ''
+            if (isEntry(cur) || isBlank(cur) || CONT_MARKER.test(cur) || /^ {3,}\S/.test(cur)) break
+            if (!foldablePlain(cur)) break
+            dt += '\n' + cur.replace(/^[ \t]+/, '')
+            i++
           }
-          node.items.push({ dd: dm[1].trim() })
+          node.items.push({ dt })
+          continue
         }
-        // A definition body continues like a list item (SS17): an indented
-        // block, or a `+` pull-left block, folds into the `<dd>`. That yields a
-        // multi-block `<dd>`, which the inline-only executable subset cannot
-        // represent - refuse rather than approximate (the corpus pins the real,
-        // loose output for all three engines).
-        else if (CONT_MARKER.test(lines[i] ?? ''))
-          throw new Refuse('`+` continuation in a definition (multi-block dd)')
-        else if (/^ {3,}\S/.test(lines[i] ?? ''))
-          throw new Refuse('indented continuation in a definition (multi-block dd)')
-        else if (isBlank(lines[i])) {
-          // A blank line inside an entry. A blank before a `:  ` definition is
-          // a separator (djot parity): a definition may be separated from its
-          // term or a previous definition by a blank line - consume it. A blank
-          // before an indented continuation is a multi-paragraph dd (out of the
-          // inline subset); otherwise the blank ends the list.
+        if ((dm = /^: {2}(.*)$/.exec(cur0))) {
+          // definition (dd): collect its full body, then parse it to blocks. A
+          // definition body continues like a list item (SS17): lazy
+          // continuations, a blank-separated indented paragraph, and a `+`
+          // pull-left block (including the first-block `:  +` form) all fold
+          // into the <dd>. Feeding the assembled lines to parseBlocks keeps a
+          // single paragraph tight and yields a loose multi-block <dd> for the
+          // rest -- matching the real output the corpus pins for all engines.
+          // (`:  \+` stays a literal `+`, never a marker.)
+          const bodyLines = []
+          i++
+          // `pullPending` marks that a `+` marker (bare or the first-block `:  +`
+          // form) opened a pulled-in block: the NEXT flush-left line begins it.
+          // This is a distinct signal from an empty definition body, so an empty
+          // `:  ` never swallows the following flush-left block.
+          let pullPending = CONT_MARKER.test(dm[1].trim())
+          if (!pullPending) {
+            bodyLines.push(dm[1].replace(/^[ \t]+/, '').replace(/[ \t]+$/, ''))
+          }
+          while (i < n) {
+            const cur = lines[i] ?? ''
+            if (isEntry(cur)) break
+            if (isBlank(cur)) {
+              // a blank before an indented line is an internal paragraph break;
+              // otherwise the blank ends this definition body.
+              if (/^ {3,}\S/.test(lines[i + 1] ?? '')) { bodyLines.push(''); i++; continue }
+              break
+            }
+            if (CONT_MARKER.test(cur)) {
+              // `+` pull-left marker: the following flush-left block joins the
+              // <dd>; a blank separator lets parseBlocks start a fresh block.
+              bodyLines.push('')
+              pullPending = true
+              i++
+              continue
+            }
+            if (/^ {3,}\S/.test(cur)) {
+              // indented continuation block (dedented by the content margin)
+              bodyLines.push(cur.replace(/^ {1,3}/, ''))
+              pullPending = false
+              i++
+              continue
+            }
+            // flush-left line: either the block pulled in by a preceding `+` /
+            // first-block marker, or a lazy continuation of the open paragraph.
+            if (pullPending) {
+              const end = takePulledBlockEnd(lines, i)
+              for (let k = i; k < end; k++) bodyLines.push(lines[k])
+              pullPending = false
+              i = end
+              continue
+            }
+            if (foldablePlain(cur)) { bodyLines.push(cur.replace(/^[ \t]+/, '').replace(/[ \t]+$/, '')); i++; continue }
+            break
+          }
+          node.items.push({ ddBlocks: bodyLines.length ? parseBlocks(bodyLines, state, false) : [] })
+          continue
+        }
+        if (isBlank(cur0)) {
+          // A blank line between entries. A blank before another `:  `/`:: `
+          // entry is a separator (djot parity) -- consume it; otherwise it ends
+          // the list.
           let look = i + 1
           while (look < n && isBlank(lines[look])) look++
-          if (look < n && /^: {2}/.test(lines[look] ?? '')) {
+          if (look < n && isEntry(lines[look] ?? '')) {
             i = look
             continue
           }
-          if (/^ {3,}\S/.test(lines[i + 1] ?? '')) {
-            throw new Refuse('multi-paragraph definition body (multi-block dd)')
-          }
           break
         }
-        else {
-          // Lazy continuation (SS17): a flush-left line with no blank before it
-          // that does not start a visible block folds into the open
-          // definition's inline content (the same rule list items / block
-          // quotes use; djot-compatible). It stays inline, so the subset can
-          // represent it.
-          const cur = lines[i] ?? ''
-          const last = node.items[node.items.length - 1]
-          const foldable =
-            last &&
-            !isBlank(cur) &&
-            !startsVisibleBlock(cur) &&
-            !LINK_DEF.test(cur) &&
-            !FOOTNOTE_DEF.test(cur) &&
-            !ABBR_DEF.test(cur) &&
-            !BULLET.test(cur) &&
-            !ORDERED.test(cur) &&
-            !FENCE.test(cur) &&
-            !CAPTION.test(cur)
-          if (foldable && last.dd !== undefined) {
-            // Lazy continuation into the open definition (dd).
-            last.dd += '\n' + cur.replace(/^[ \t]+/, '')
-          } else if (foldable && last.dt !== undefined) {
-            // A term (dt) folds a plain continuation line like a heading, so a
-            // wrapped term line does not strand the definition.
-            last.dt += '\n' + cur.replace(/^[ \t]+/, '')
-          } else {
-            break
-          }
-        }
-        i++
+        break
       }
       if (node.items.length === 0) throw new Refuse('malformed definition list')
       push(node)
@@ -892,6 +939,23 @@ function takeOneBlock(lines, start, state) {
   let end = start
   while (end < lines.length && !isBlank(lines[end]) && !CONT_MARKER.test(lines[end]) && !QUOTE.test(lines[end])) end++
   return { rawMarker: lines.slice(start, end), next: end }
+}
+
+// Extent of the ONE flush-left block a `+` marker pulls into a footnote/<dd>
+// (SS17 L4). A fenced code block runs through its matching closer (so its body,
+// blanks and closing fence stay inside the container); any other block is the
+// maximal contiguous non-blank run up to the next blank or marker. Returns the
+// exclusive end index. The caller hands lines[start..end) to parseBlocks, which
+// owns the actual block classification.
+function takePulledBlockEnd(lines, start) {
+  const fm = FENCE.exec(lines[start] ?? '')
+  if (fm && parseFenceInfo(fm[2])) {
+    const close = findCloser(lines, start, fm[1])
+    if (close !== -1) return close + 1
+  }
+  let end = start
+  while (end < lines.length && !isBlank(lines[end]) && !CONT_MARKER.test(lines[end])) end++
+  return end
 }
 
 // --- lists: PART 9 SS11 N1-N3, SS17 L1-L4, SS24 C3/C4 ----------------------

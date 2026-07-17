@@ -207,9 +207,18 @@ function renderBlock(b, depth, ctx) {
       return `${pad2}<div class="hardbreaks">\n${parts.join('\n')}\n${pad2}</div>`
     }
     case 'deflist': {
-      const rows = b.items.map((it) =>
-        it.dt !== undefined ? `${pad}  <dt>${renderInline(it.dt)}</dt>` : `${pad}  <dd>${renderInline(it.dd)}</dd>`
-      )
+      const rows = b.items.map((it) => {
+        if (it.dt !== undefined) return `${pad}  <dt>${renderInline(it.dt)}</dt>`
+        const blocks = it.ddBlocks
+        if (blocks.length === 0) return `${pad}  <dd></dd>`
+        // a single paragraph stays tight (inline <dd>); anything more is a loose
+        // multi-block <dd> with each block on its own indented line.
+        if (blocks.length === 1 && blocks[0].t === 'para' && blocks[0].caption === undefined) {
+          return `${pad}  <dd>${renderInline(blocks[0].lines.join('\n'))}</dd>`
+        }
+        const inner = blocks.map((c) => renderBlock(c, depth + 2, ctx)).filter((x) => x !== null).join('\n')
+        return `${pad}  <dd>\n${inner}\n${pad}  </dd>`
+      })
       return `${pad}<dl>\n${rows.join('\n')}\n${pad}</dl>`
     }
     case 'raw':

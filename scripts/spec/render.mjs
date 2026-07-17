@@ -244,10 +244,10 @@ const sem = g.createSemantics().addOperation('h', {
     // symbol `+-`, it does not become `:±:`).
     return `:${escapeHtml(name.sourceString)}:`
   },
-  symbolAttr(_c1, _name, _c2, _attrs) {
-    // Full Carve wraps `:name:{...}` in a <span> carrying the attributes;
-    // Core has no symbol node to attach them to, so it refuses (out of subset).
-    throw new Refuse('symbol with attributes')
+  symbolAttr(_c1, name, _c2, attrs) {
+    // `:name:{...}`: an UNMAPPED symbol renders as its literal `:name:` text,
+    // wrapped in a <span> that carries the attribute block (PART 9 §7).
+    return `<span${renderAttrs(attrs.parseAttrs())}>:${escapeHtml(name.sourceString)}:</span>`
   },
   mention(_a, name) {
     return `<span class="mention"><strong>@${escapeHtml(name.sourceString)}</strong></span>`

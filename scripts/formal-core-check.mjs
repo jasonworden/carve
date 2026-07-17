@@ -13,6 +13,17 @@
  *   - MATCH + DIFF  -> a DEFECT: the executable spec claims an input it
  *                      cannot render faithfully. The gate FAILS.
  *
+ * REFUSAL RATCHET: the set of refused inputs is pinned to REFUSED_ALLOW below.
+ * The gate FAILS if the actual refused set differs in EITHER direction:
+ *   - a NEW refusal not in the allowlist  -> a construct escaped the executable
+ *     spec (a regression); either extend the spec to cover it, or (deliberately)
+ *     add it to the allowlist.
+ *   - a STALE allowlist entry that now renders -> the allowlist is out of date;
+ *     remove the entry so the ratchet keeps its grip.
+ * This locks in coverage: once an input is conformant it can never silently
+ * regress to REFUSED. The allowlist is empty because every corpus input is
+ * currently inside the executable subset.
+ *
  * Usage: node scripts/formal-core-check.mjs [--list] [--diff]
  */
 
@@ -29,11 +40,16 @@ const inputs = readdirSync(corpusDir)
   .filter((f) => f.endsWith('.crv'))
   .sort()
 
+// Committed allowlist of inputs permitted to be REFUSED (basenames, no
+// extension). Empty: every corpus input is inside the executable subset.
+const REFUSED_ALLOW = new Set([])
+
 const listMode = process.argv.includes('--list')
 const diffMode = process.argv.includes('--diff')
 let core = 0
 const diffs = []
 const refused = []
+const refusedNames = new Set()
 
 for (const f of inputs) {
   const src = readFileSync(resolve(corpusDir, f), 'utf8')
@@ -44,6 +60,7 @@ for (const f of inputs) {
   } catch (e) {
     if (e instanceof Refuse || e.refuse) {
       refused.push(`${f}: ${e.message}`)
+      refusedNames.add(f.replace(/\.crv$/, ''))
       continue
     }
     throw e
@@ -70,4 +87,21 @@ for (const d of diffs) {
 if (diffMode) {
   for (const r of refused.slice(0, 400)) console.log(`REFUSED ${r}`)
 }
-process.exit(diffs.length ? 1 : 0)
+
+// --- refusal ratchet: actual refused set must equal REFUSED_ALLOW -----------
+const newlyRefused = [...refusedNames].filter((n) => !REFUSED_ALLOW.has(n)).sort()
+const staleAllowed = [...REFUSED_ALLOW].filter((n) => !refusedNames.has(n)).sort()
+let ratchetFail = false
+if (newlyRefused.length) {
+  ratchetFail = true
+  console.log(`\nRATCHET FAILURE: ${newlyRefused.length} input(s) newly REFUSED (a construct escaped the executable spec):`)
+  for (const n of newlyRefused) console.log(`  + ${n}`)
+  console.log('  -> cover it in the executable spec, or add it to REFUSED_ALLOW deliberately.')
+}
+if (staleAllowed.length) {
+  ratchetFail = true
+  console.log(`\nRATCHET FAILURE: ${staleAllowed.length} stale REFUSED_ALLOW entry/entries now render (remove them):`)
+  for (const n of staleAllowed) console.log(`  - ${n}`)
+}
+
+process.exit(diffs.length || ratchetFail ? 1 : 0)
