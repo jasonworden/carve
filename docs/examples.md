@@ -13,4 +13,4 @@ The examples are split into three pages:
 - [**Extensions**](/examples/extensions) — tier-2/3 features layered on the core language: admonitions, abbreviations, mentions and tags, inline extensions, symbols, and cross-reference numbering.
 - [**Edge cases**](/examples/edge-cases) — precise boundary rules, table-alignment variants, lazy continuation, paragraph interruption, security hardening and other robustness guarantees.
 
-Every pair on those pages is also part of the [conformance corpus](/validation): the HTML shown is generated from the same fixtures the reference implementations are tested against, so it cannot drift from real output.
+Every pair on those pages is also part of the [conformance corpus](/grammar): the HTML shown is generated from the same fixtures the reference implementations are tested against, so it cannot drift from real output.

@@ -68,7 +68,7 @@ Use /italic/ for emphasis.
 
 ## 2. Caret `^` Overloading
 
-The `^` character has three meanings:
+The `^` character has four meanings:
 
 | Context | Meaning | Example |
 |---------|---------|---------|

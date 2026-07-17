@@ -213,7 +213,7 @@ export default defineConfig({
     ],
 
     editLink: {
-      pattern: 'https://github.com/markup-carve/carve/edit/master/docs/:path',
+      pattern: 'https://github.com/markup-carve/carve/edit/main/docs/:path',
       text: 'Edit this page on GitHub',
     },
 

@@ -97,8 +97,9 @@ differs by processor. The narrative below details each tier.
   admonition (no new syntax): it emits the HTML5 `<details>/<summary>`
   disclosure widget instead of the default `<div class="details">`. The
   **quoted** title becomes the `<summary>` (a title-less block falls back to
-  `<summary>Details</summary>`); `{open}` on the opener carries through as
-  `<details open>`. Disabled, the block renders as the ordinary admonition
+  `<summary>Details</summary>`); `{open}` on the opener carries through as the
+  `open` attribute (`<details open="">` interactive, `<details open>` static).
+  Disabled, the block renders as the ordinary admonition
   div, so documents stay readable. See the per-impl `docs/extensions.md` in
   carve-js / carve-php / carve-rs.
 

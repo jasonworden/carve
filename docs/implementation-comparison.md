@@ -9,7 +9,9 @@ implementation exposes.
 ## Snapshot (2026-06-19)
 
 > Run on 2026-06-19 with all three implementations built from their current
-> `main`. Regenerate any time with `npm run compare:impls`.
+> `main`. Regenerate any time with `npm run compare:impls`. The figures below
+> are that run; the core corpus has since grown (402 pairs at time of writing),
+> so treat the counts as a historical snapshot, not a live total.
 
 <div class="impl-summary-grid">
   <div class="impl-summary-card">

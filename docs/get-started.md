@@ -21,14 +21,14 @@ Or skim the **[Cheat Sheet](/cheatsheet)** — the whole syntax fits on one page
 
 There are three reference engines. All of them turn a Carve string into HTML and pass the shared Tier-1 corpus.
 
-::: warning Registry packages are in progress
-The npm, Packagist, and crates.io releases are not published yet. For now, install the parsers straight from their Git repositories. The package names below are the ones the published releases will use.
+::: tip Published packages
+The three reference engines are published: npm [`@markup-carve/carve`](https://www.npmjs.com/package/@markup-carve/carve), Packagist [`markup-carve/carve-php`](https://packagist.org/packages/markup-carve/carve-php), and crates.io [`carve-lang`](https://crates.io/crates/carve-lang). The install commands below use them.
 :::
 
 ### JavaScript / TypeScript — [`carve-js`](https://github.com/markup-carve/carve-js)
 
 ```bash
-npm install github:markup-carve/carve-js
+npm install @markup-carve/carve
 ```
 
 ```ts
@@ -44,8 +44,7 @@ const html = carveToHtml('/italic/, *bold*, and a heading')
 The Rust engine is a third reference-quality implementation — Tier-1 corpus passing — and ships a `carve` CLI tool.
 
 ```bash
-# Crate not yet published to crates.io; install from source:
-cargo install --git https://github.com/markup-carve/carve-rs carve-lang
+cargo install carve-lang
 ```
 
 ```bash
@@ -53,7 +52,7 @@ cargo install --git https://github.com/markup-carve/carve-rs carve-lang
 carve input.crv
 ```
 
-**Browser / Node via WebAssembly — [`carve-wasm`](https://github.com/markup-carve/carve-wasm)**
+### Browser / Node via WebAssembly — [`carve-wasm`](https://github.com/markup-carve/carve-wasm)
 
 carve-wasm wraps carve-rs as a WebAssembly module, usable in the browser or any Node/Bun/Deno environment. It is early-stage; see the repository for the current API.
 
@@ -73,11 +72,11 @@ $html = (new CarveConverter())->convert('/italic/, *bold*, and a heading');
 
 ### Language bindings
 
-Higher-level wrappers built on carve-rs are available for other languages. Registry packages are not yet published; install from the respective GitHub repositories.
+Higher-level wrappers built on carve-rs are available for other languages. Ruby is on RubyGems and Go is fetched by module path; Python is not on PyPI yet (install from Git).
 
-| Language | Project | Install (once published) |
+| Language | Project | Install |
 |---|---|---|
-| Python | [carve-py](https://github.com/markup-carve/carve-py) | `pip install carve-lang` |
+| Python | [carve-py](https://github.com/markup-carve/carve-py) | from Git (PyPI pending) |
 | Ruby | [carve-rb](https://github.com/markup-carve/carve-rb) | `gem install carve-lang` |
 | Go | [carve-go](https://github.com/markup-carve/carve-go) | `go get github.com/markup-carve/carve-go` |
 
