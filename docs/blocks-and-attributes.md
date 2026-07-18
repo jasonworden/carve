@@ -54,8 +54,8 @@ return $x;
 ```
 ````
 
-- `.line-numbers` asks the renderer for a line-number gutter.
-- `data-line-start="42"` (a plain `data-*` attribute) starts numbering at 42.
+- `.line-numbers` asks the renderer for a line-number gutter; numbering is 1-based (line 1 first), matching editors, diffs, and compiler/linter line references.
+- `data-line-start="42"` (a plain `data-*` attribute) overrides the start, so the gutter begins at 42 instead of 1 - useful for excerpts lifted from a larger file.
 - `"src/app.php"` is the code-block header; core carries it as `title` on the `<pre>`, and renderers typically surface it as a caption.
 - `[Backend]` is a grouping label; core ignores it, while a code-group extension can use it as the tab name.
 
