@@ -21,6 +21,11 @@ export class Refuse extends Error {
   }
 }
 
+// grammar.ebnf PART 26: block containers FLATTEN/refuse rather than crash.
+// Bound the block-container recursion (blockquote/list/div/footnote body) so a
+// pathologically nested document REFUSES instead of overflowing the JS stack.
+const MAX_NESTING_DEPTH = 200
+
 const HEADING = /^(#{1,6}) (.*)$/
 const HR = /^(-{3,}|\*{3,}|_{3,})[ \t]*$/
 const FENCE = /^(`{3,}|~{3,})(.*)$/
@@ -317,10 +322,31 @@ export function parse(src) {
     }
   }
   const blocks = parseBlocks(lines, state, true)
+  // blockDepth is transient recursion bookkeeping (see parseBlocks); it must
+  // not leak into the parse-result contract { blocks, linkDefs, footnoteDefs,
+  // abbrDefs }. It is back to 0 here, so drop it before spreading state.
+  delete state.blockDepth
   return { blocks, ...state }
 }
 
+// Depth-guarded entry: every block-container recursion re-enters here, so a
+// single counter on `state` bounds the nesting uniformly (PART 26). The
+// counter is incremented on entry and decremented on exit (try/finally) so
+// sibling containers never accumulate depth.
 function parseBlocks(lines, state, top, inItem = false) {
+  state.blockDepth = (state.blockDepth ?? 0) + 1
+  if (state.blockDepth > MAX_NESTING_DEPTH) {
+    state.blockDepth--
+    throw new Refuse('block nesting exceeds MAX_NESTING_DEPTH')
+  }
+  try {
+    return parseBlocksImpl(lines, state, top, inItem)
+  } finally {
+    state.blockDepth--
+  }
+}
+
+function parseBlocksImpl(lines, state, top, inItem = false) {
   const blocks = []
   let i = 0
   const n = lines.length
@@ -809,7 +835,7 @@ function parseBlocks(lines, state, top, inItem = false) {
         }
         break
       }
-      const children = parseBlocks(inner.filter((l) => l !== ' CONT'), state, false)
+      const children = parseBlocks(inner, state, false)
       const node = { t: 'quote', children }
       // caption -> <figure><blockquote/><figcaption> (PART 9 SS4)
       let j = i
@@ -1185,7 +1211,6 @@ function finalizeOrdered(list) {
   const ds = list.ord.dialects
   let chosen = ds[0]
   if (ds.length > 1) {
-    const first = list.items.length > 0 ? null : null
     const roman = ds.find((d) => d.dialect.toLowerCase() === 'roman')
     const alpha = ds.find((d) => d.dialect.toLowerCase() === 'alpha')
     if (roman && alpha) {

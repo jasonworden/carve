@@ -100,14 +100,14 @@ function renderBlock(b, depth, ctx) {
         const id = / id="([^"]*)"/.exec(ba)?.[1]
         const cap = numberCaption(b.caption, ctx, id)
         const esc0 = b.text
-          .replace(/[\u202A-\u202E\u2066-\u2069]/g, '')
+          .replace(/[\u202A-\u202E\u2066-\u2069\uE000\uE001\u0002]/g, '')
           .replaceAll('&', '&amp;')
           .replaceAll('<', '&lt;')
           .replaceAll('>', '&gt;')
         return `${pad}<figure${ba}>\n${pad}  <pre${title}><code${cls}>${esc0}</code></pre>\n${pad}  <figcaption>${renderInline(cap)}</figcaption>\n${pad}</figure>`
       }
       const esc = b.text
-        .replace(/[‪-‮⁦-⁩]/g, '')
+        .replace(/[‪-‮⁦-⁩]/g, '')
         .replaceAll('&', '&amp;')
         .replaceAll('<', '&lt;')
         .replaceAll('>', '&gt;')
@@ -409,7 +409,17 @@ function renderTable(node, depth, ctx) {
 // --- PART 9R R1: reference links --------------------------------------------
 function resolveRefs(html, ctx) {
   return html.replace(/ref:(\{.*?\})/g, (_, json) => {
-    const { label, text, attrs } = JSON.parse(json)
+    // Belt-and-suspenders: a genuine ref sentinel always carries well-formed
+    // JSON. Anything else is spoofed/garbage (sentinel chars are stripped from
+    // document text upstream) -- degrade to the literal match, never throw.
+    let parsed
+    try {
+      parsed = JSON.parse(json)
+    } catch {
+      return _
+    }
+    const { label, text, attrs } = parsed
+    if (typeof text !== 'string') return _
     const key = label ?? stripTags(text)
     const def = ctx.linkDefs.get(key)
     if (!def) return `[${text}][${label ?? ''}]` // unresolved -> literal (R1)

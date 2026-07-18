@@ -16,9 +16,15 @@ import { Refuse } from './layout.mjs'
 const here = dirname(fileURLToPath(import.meta.url))
 const g = ohm.grammar(readFileSync(presolve(here, '../../resources/carve-core.ohm'), 'utf8'))
 
+// Bidi override controls PLUS the pipeline's own PART 9R sentinels
+// (U+E000 open, U+E001 close, U+0002 STX field separator). Literal document
+// text must never carry these through into the resolution passes, or it would
+// be reinterpreted as pipeline framing (spoofed refs/footnotes, JSON.parse).
+const STRIP = /[‪-‮⁦-⁩]/g
+
 const escapeHtml = (s) =>
   s
-    .replace(/[‪-‮⁦-⁩]/g, '')
+    .replace(STRIP, '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;')
@@ -379,10 +385,6 @@ sem.addOperation('titleText', {
     return chars.children.map((c) => c.sourceString.replace(/^\\/, '')).join('')
   },
 })
-// reuse parseAttrs for quoted strings
-for (const op of ['parseAttrs']) {
-  // attrSem already defines quoted; merge by extending sem
-}
 sem.addOperation('parseAttrs', {
   attrs(_o, _s1, first, _s2, rest, _s3, _c) {
     return [first.parseAttrs(), ...rest.children.map((c) => c.parseAttrs())]
@@ -441,6 +443,41 @@ sem.addOperation('parseAttrs', {
 const DELIMS = new Set(['/', '*', '_', '~', '='])
 const isWordCh = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c)
 const isWs = (c) => c === undefined || /\s/.test(c)
+
+// grammar.ebnf PART 26: every container FLATTENS/refuses rather than crashing;
+// MAX_NESTING_DEPTH bounds recursion so the pipeline stays linear-time and
+// never overflows the stack.
+const MAX_NESTING_DEPTH = 200
+
+// The Ohm `bracketed`/`nested` rules recurse once per open bracket. A run of
+// unmatched/deeply-nested `[` would blow the JS call stack inside g.match with
+// a raw RangeError. Pre-scan the maximum simultaneous `[` nesting (skipping
+// escapes and verbatim spans, exactly as overlapScan does) and REFUSE past the
+// bound -- a legitimate refusal, not a crash.
+function bracketDepthExceeds(text, limit) {
+  let depth = 0
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i]
+    if (c === '\\') {
+      i++
+      continue
+    }
+    if (c === '`') {
+      let run = 1
+      while (text[i + run] === '`') run++
+      const close = text.indexOf('`'.repeat(run), i + run)
+      i = close === -1 ? text.length : close + run - 1
+      continue
+    }
+    if (c === '[') {
+      depth++
+      if (depth > limit) return true
+    } else if (c === ']') {
+      if (depth > 0) depth--
+    }
+  }
+  return false
+}
 
 function overlapScan(text) {
   const stack = []
@@ -586,6 +623,7 @@ export function renderInline(text, prevCtx = '') {
 
 function renderInlineInner(text) {
   if (overlapScan(text)) throw new Refuse('overlapping emphasis (delimiter-stack close-first rule)')
+  if (bracketDepthExceeds(text, MAX_NESTING_DEPTH)) throw new Refuse('inline nesting exceeds MAX_NESTING_DEPTH')
   const m = g.match(text, 'inlines')
   if (m.failed()) throw new Refuse(`inline: ${m.shortMessage}`)
   return sem(m).h()
