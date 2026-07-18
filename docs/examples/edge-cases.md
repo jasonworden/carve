@@ -3770,3 +3770,119 @@ a/~y~ a/=y=
 
 :::
 
+## Bold-italic delimiter needs content
+
+A bold-italic run `/*...*/` collapses to `<strong><em>...</em></strong>` only when
+it wraps content. With nothing between the delimiters, the inner `**` is literal
+and only the outer `/.../ ` italic applies -- so `/**/` is an emphasized `**`, not
+empty bold-italic.
+
+::: compare
+
+```carve
+/**/
+```
+
+```html
+<p><em>**</em></p>
+```
+
+:::
+
+A single space is content for the outer italic but not for the bold pair, so the
+`* *` stays literal inside one `<em>`.
+
+::: compare
+
+```carve
+/* */
+```
+
+```html
+<p><em>* *</em></p>
+```
+
+:::
+
+With real content, the full bold-italic collapse still applies.
+
+::: compare
+
+```carve
+/*x*/
+```
+
+```html
+<p><strong><em>x</em></strong></p>
+```
+
+:::
+
+## Thematic break requires contiguous markers
+
+A thematic break is three or more of the same marker (`-`, `*`, `_`) contiguous
+at column zero. Spacing the markers apart, or indenting the run, disqualifies it:
+the line is parsed as ordinary block content instead.
+
+Spaced `*` markers are a bullet list, not a break.
+
+::: compare
+
+```carve
+* * *
+```
+
+```html
+<ul>
+  <li>
+    <ul>
+      <li>*</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
+
+Spaced `_` markers are a plain paragraph.
+
+::: compare
+
+```carve
+_ _ _
+```
+
+```html
+<p>_ _ _</p>
+```
+
+:::
+
+An indented `***` run is a paragraph, not a break.
+
+::: compare
+
+```carve
+ ***
+```
+
+```html
+<p>***</p>
+```
+
+:::
+
+A contiguous run at column zero is still a thematic break.
+
+::: compare
+
+```carve
+***
+```
+
+```html
+<hr>
+```
+
+:::
+

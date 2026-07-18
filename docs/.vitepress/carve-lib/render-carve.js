@@ -40,7 +40,7 @@ function renderBlock(node, ctx) {
         case 'code-block': {
             const fence = safeFence(node.content, 3);
             const info = codeFenceInfo(node.lang, node.header, node.label);
-            return withAttrs(`${fence}${info}\n${node.content}\n${fence}`);
+            return withAttrs(`${fence}${info}\n${protectVerbatim(node.content)}\n${fence}`);
         }
         case 'blockquote': {
             const inner = renderBlocks(node.children, ctx);
@@ -87,7 +87,7 @@ function renderBlock(node, ctx) {
             return renderImage(node);
         case 'raw-block': {
             const fence = safeFence(node.content, 3);
-            return withAttrs(`${fence}=${escapeFormat(node.format)}\n${node.content}\n${fence}`);
+            return withAttrs(`${fence}=${escapeFormat(node.format)}\n${protectVerbatim(node.content)}\n${fence}`);
         }
         case 'abbreviation-def':
             return `*[${escapeAbbr(node.abbr)}]: ${escapePlainLine(node.expansion)}`;
@@ -390,14 +390,14 @@ function renderImage(node) {
 }
 function renderFrontmatter(frontmatter) {
     const open = frontmatter.format === 'yaml' ? '---' : `---${escapeFormat(frontmatter.format)}`;
-    return `${open}\n${frontmatter.content}\n---`;
+    return `${open}\n${protectVerbatim(frontmatter.content)}\n---`;
 }
 function renderBlockComment(content) {
     let longest = 0;
     for (const match of content.matchAll(/%+/g))
         longest = Math.max(longest, match[0].length);
     const fence = '%'.repeat(Math.max(3, longest + 1));
-    return `${fence}\n${content}\n${fence}`;
+    return `${fence}\n${protectVerbatim(content)}\n${fence}`;
 }
 function renderMath(display, content) {
     const code = renderCode(content);
@@ -518,7 +518,26 @@ function alignMarker(align) {
 }
 function normalize(text) {
     const lines = trimNonNbsp(text.replace(/\ue000/g, '\u00a0')).split('\n');
-    return `${trimNonNbsp(lines.map((line) => line.replace(/[^\S\u00a0]+$/g, '')).join('\n').replace(/\n{3,}/g, '\n\n'))}\n`;
+    const cleaned = trimNonNbsp(lines.map((line) => line.replace(/[^\S\u00a0]+$/g, '')).join('\n').replace(/\n{3,}/g, '\n\n'));
+    return `${restoreVerbatim(cleaned)}\n`;
+}
+/**
+ * Whole-document normalization (trailing-whitespace strip, blank-line
+ * collapsing) must not reach inside verbatim content - code blocks, raw
+ * blocks, frontmatter, and block comments reproduce their content
+ * byte-exact (issue 340). Sentinel-encode the vulnerable bytes before the
+ * content joins the document string; normalize() restores them at the end.
+ * U+E000 is already the NBSP sentinel; U+E001..U+E003 extend the scheme.
+ */
+function protectVerbatim(content) {
+    return content
+        .replace(/[ \t]+(?=\n|$)/g, (run) => run.replace(/ /g, '\ue001').replace(/\t/g, '\ue002'))
+        .split('\n')
+        .map((line) => (line === '' ? '\ue003' : line))
+        .join('\n');
+}
+function restoreVerbatim(text) {
+    return text.replace(/\ue001/g, ' ').replace(/\ue002/g, '\t').replace(/\ue003/g, '');
 }
 function trimNonNbsp(text) {
     return text.replace(TRIM_NON_NBSP_RE, '');

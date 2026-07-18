@@ -1,0 +1,19 @@
+Bold-italic delimiter needs content
+
+```
+/**/
+.
+<p><em>**</em></p>
+```
+
+```
+/* */
+.
+<p><em>* *</em></p>
+```
+
+```
+/*x*/
+.
+<p><strong><em>x</em></strong></p>
+```

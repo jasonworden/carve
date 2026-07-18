@@ -12,11 +12,15 @@ import { utf8ByteLength } from './abbr-budget.js';
 let activeMatchers = [];
 let activeMatcherCtx = null;
 const RE_HEADING = /^(#{1,6}) +(.+?)(?:\s+\{((?:[^}"'\n]|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')+)\})?\s*$/;
-// Thematic break: a line of 3+ of the same `-`, `*`, or `_`, optionally
-// separated by spaces/tabs (`---`, `- - -`, `* * *`); nothing else on the line
-// (grammar thematic_break). A run alone on a line can't be emphasis (no
-// content). The chars must all match, so a mixed `-*-` is not a break.
-const RE_HR = /^[ \t]*([-*_])(?:[ \t]*\1){2,}[ \t]*$/;
+// Thematic break: a COL-0 line of 3+ CONTIGUOUS identical `-`, `*`, or `_`
+// (`---`, `***`, `___`, `----`), followed only by optional trailing
+// whitespace and end of line (grammar §262 thematic_break). No leading
+// indent and no internal spaces: a spaced/indented `* * *` / ` ***` is NOT a
+// break and falls through to normal parsing (list / paragraph). The chars
+// must all match, so a mixed `-*-` is not a break. Matches the executable-
+// spec oracle `/^(-{3,}|\*{3,}|_{3,})[ \t]*$/`. Tested against the RAW line
+// (NOT trimStructural), so leading whitespace correctly disqualifies it.
+const RE_HR = /^([-*_])\1{2,}[ \t]*$/;
 // Info string is a single language token, optionally followed by a bracketed
 // `[label]` (structured metadata; e.g. ```php [NPM] or ```[NPM]). The charset
 // covers real-world tags with punctuation (c++, c#, f#, asp.net, text/html).
@@ -829,7 +833,7 @@ function parseBlockInner(lexer) {
         lexer.consume();
         return null;
     }
-    if (RE_HR.test(trimStructural(line))) {
+    if (RE_HR.test(line)) {
         lexer.consume();
         return { type: 'thematic-break' };
     }
@@ -1607,7 +1611,7 @@ function trackBlockQuoteLazyState(content, state) {
     // `# h\n- item` is a heading plus a sibling list at the top level, and as
     // `> a\n> # h\n- item` is a quote (para + heading) plus a sibling list.
     // Mirrors trackItemLazyState.
-    if (RE_HEADING.test(content) || isTableRow(content) || RE_HR.test(trimStructural(content))) {
+    if (RE_HEADING.test(content) || isTableRow(content) || RE_HR.test(content)) {
         state.paragraphOpen = false;
         return;
     }
@@ -1950,7 +1954,7 @@ function lineOpensBlock(line) {
         RE_ABBR_DEF.test(line) ||
         RE_FOOTNOTE_DEF.test(line) ||
         RE_LINK_DEF.test(line) ||
-        RE_HR.test(trimStructural(line)) ||
+        RE_HR.test(line) ||
         RE_HEADING.test(line) ||
         RE_DEFLIST_TERM.test(line) ||
         RE_BLOCKQUOTE.test(line) ||
@@ -1979,7 +1983,7 @@ function lazyContinuationEndsList(line) {
         RE_ABBR_DEF.test(line) ||
         RE_FOOTNOTE_DEF.test(line) ||
         RE_LINK_DEF.test(line) ||
-        RE_HR.test(trimStructural(line)) ||
+        RE_HR.test(line) ||
         RE_HEADING.test(line) ||
         RE_DEFLIST_TERM.test(line) ||
         RE_BLOCKQUOTE.test(line) ||
@@ -2050,7 +2054,7 @@ function trackItemLazyState(content, state) {
         return;
     }
     // A table row, heading, or thematic break leaves no open trailing paragraph.
-    if (isTableRow(content) || RE_HEADING.test(content) || RE_HR.test(trimStructural(content))) {
+    if (isTableRow(content) || RE_HEADING.test(content) || RE_HR.test(content)) {
         state.lazyFoldable = false;
         return;
     }
@@ -2825,16 +2829,16 @@ function startsInterruptingBlock(lexer) {
         case '-':
             // thematic break only. A bullet/task does NOT interrupt a paragraph
             // (symmetric with ordered markers; a list needs a blank line, §10).
-            return RE_HR.test(trimStructural(ln));
+            return RE_HR.test(ln);
         case '+':
             // `+` is the list-continuation marker, never an interrupter.
             return false;
         case '*':
             // abbreviation definition (invisible) or thematic break. A bullet/task
             // does NOT interrupt (symmetric, §10).
-            return RE_ABBR_DEF.test(ln) || RE_HR.test(trimStructural(ln));
+            return RE_ABBR_DEF.test(ln) || RE_HR.test(ln);
         case '_':
-            return RE_HR.test(trimStructural(ln));
+            return RE_HR.test(ln);
         case ':':
             // An admonition/div/line-block that has a `:::` closer ahead (the `::: |`
             // line-block shares the bare `:::` closer). A definition-list term (`::`)
@@ -3998,13 +4002,30 @@ function matchEmphasis(text, i, source, inFootnote = false, noClose = new Map())
     const c = text[i];
     // Bold-italic /*...*/  (priority over /italic/ and *bold*)
     if (c === '/' && text[i + 1] === '*') {
-        const close = findClose(text, i + 2, '*/');
-        if (close !== -1) {
-            const inner = text.slice(i + 2, close);
-            return {
-                node: { type: 'bold-italic', children: scanInline(inner, shiftSource(source, text, i + 2), inFootnote) },
-                end: close + 2,
-            };
+        const start = i + 2;
+        // A bold-italic span requires a non-whitespace char right after `/*`
+        // (grammar boldItalic `~spaceOrEnd`). Empty (`/**/`) or space-initial
+        // (`/* x*/`) content is not bold-italic and falls through to `/` emphasis,
+        // matching carve-php parseBoldItalic.
+        if (start < text.length && !/\s/.test(text[start])) {
+            let searchPos = start;
+            for (;;) {
+                const close = findClose(text, searchPos, '*/');
+                if (close === -1)
+                    break;
+                const inner = text.slice(start, close);
+                // The content must not end in whitespace (nor be empty). A trailing
+                // space closer like `/*x */` is not bold-italic; skip this `*/` and
+                // look for a later one before giving up (parity with carve-php).
+                if (inner === '' || /\s/.test(inner[inner.length - 1])) {
+                    searchPos = close + 1;
+                    continue;
+                }
+                return {
+                    node: { type: 'bold-italic', children: scanInline(inner, shiftSource(source, text, start), inFootnote) },
+                    end: close + 2,
+                };
+            }
         }
     }
     // Single-char delimiters. Highlight `=` is single-char like the rest; a
