@@ -6,6 +6,14 @@
  *   2. resources/carve-core.ohm - PART 3 inline grammar (Ohm/PEG)
  *   3. scripts/spec/html.mjs    - PART 9R resolution + PART 10 serialization
  *
+ * SCOPE: this pipeline is a corpus ORACLE, run only on the trusted pinned
+ * corpus - it is not an untrusted-input parser. Pathological nesting now Refuses
+ * (grammar.ebnf §26 MAX_NESTING_DEPTH), but one super-linear case remains by
+ * design: a long run of unclosed emphasis openers (e.g. `/x ` repeated) is O(n^2)
+ * here because the inline PEG backtracks. §26's linear-time guarantee is the
+ * production ENGINES' contract (carve-js/php/rs enforce it, verified in their own
+ * suites); the oracle does not re-implement it. Do not feed this untrusted input.
+ *
  * Buckets per corpus pair:
  *   - REFUSED       -> the input uses constructs outside the executable
  *                      subset; counted out of scope (refuse > approximate).
