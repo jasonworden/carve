@@ -108,18 +108,36 @@ CarveCore {
   // ==========================================================================
   // INLINE (Core)
   // ==========================================================================
-  inline     = arrow | symbol | delimRun | inlineNote | footnoteRef | crossref | extension | symbolAttr | shortcode | mention | tag
-             | editorial | forcedSpan | span
+  // ORDER IS TUNED FOR SPEED (byte-exactness preserved). The three most common
+  // tokens -- `word`, `spComment`, `inlineSpace` -- are hoisted to the FRONT:
+  // NO other alternative begins with an alphanumeric or a space, so hoisting
+  // them cannot change which alternative wins, and it lets an alnum/space char
+  // match in one attempt. `litDelim` stays after `arrow` and `span` (they claim
+  // `=>` and `/*` first). This keeps the tokenizer's per-character work
+  // near-constant, so the inline pass (with the SS9 delimiter stack) is O(n).
+  inline     = word | spComment | inlineSpace
+             | arrow | span | inlineNote | litDelim
+             | symbol | footnoteRef | crossref | extension | symbolAttr | shortcode | mention | tag
+             | editorial | forcedSpan
              | mathD | mathI | codeA | nbspEsc | hardBreak | escape | image | bracketed
-             | autolink | word | spComment | inlineSpace | litDelim | bang | dollar
+             | autolink | bang | dollar
              | ellipsis | dashRun | dot | dash | plus | pct | lt | gt
              | dquote | squote | hash | looseAttrs | nl | other | anyChar
-  // SAME-DELIMITER ADJACENCY (bare_opener\'s !(d) guard): a run of 2+
-  // identical bare delimiters is literal text, never an opener.
+  // BARE EMPHASIS ($9 delimiter stack): the five bare delimiters / * _ ~ =
+  // are NOT resolved by the PEG here. Each bare delimiter that is not glued
+  // into a `word` (intraword absorption, below) or consumed by a leaf
+  // construct falls through to `litDelim`, a single-char candidate token.
+  // scripts/spec/render.mjs runs ONE left-to-right delimiter-stack pass
+  // (grammar.ebnf PART 9 $9 E1-E5) over the token stream to pair openers and
+  // closers, so run resolution is O(n) with NO backtracking. The bare
+  // single-char span PEG productions (emph/strong/underline/strike/highlight,
+  // and the delimRun same-delimiter-adjacency rule) were REMOVED; their job
+  // now lives in the resolver. The bracing / forced / editorial constructs
+  // and the combined /*...*/ bold_italic two-char token stay in the PEG.
   delimRun   = dRun<"/"> | dRun<"*"> | dRun<"_"> | dRun<"~"> | dRun<"^"> | dRun<"="> | dRun<",">
   dRun<d>    = d d+
 
-  span       = boldItalic | emph | strong | underline | strike | highlight
+  span       = boldItalic
 
   // Combined form /*x*/ -> <strong><em> (grammar.ebnf bold_italic); matched
   // before emph so the two-char token wins over nested /-then-* parsing.
@@ -134,39 +152,13 @@ CarveCore {
              | ellipsis | dashRun | dquote | squote
              | dot | dash | plus | pct
 
-  // One rule shape per delimiter (the bare_opener/bare_closer instantiation).
-  emph       = "/" ~"/" ~spaceOrEnd emphInner+ emphClose attrs?
-  emphInner = ~emphClose (strong | underline | strike | highlight
-             | rich | word | spaceIn<"/"> | litSelf<"/"> | litDelim | other)
-  emphClose  = "/" ~alnumCh
-
-  strong     = "*" ~"*" ~spaceOrEnd strongInner+ strongClose attrs?
-  strongInner = ~strongClose (emph | underline | strike | highlight
-             | rich | word | spaceIn<"*"> | litSelf<"*"> | litDelim | other)
-  strongClose = "*" ~alnumCh
-
-  underline  = "_" ~"_" ~spaceOrEnd underInner+ underClose attrs?
-  underInner = ~underClose (emph | strong | strike | highlight
-             | rich | word | spaceIn<"_"> | litSelf<"_"> | litDelim | other)
-  underClose = "_" ~alnumCh
-
-  strike     = "~" ~"~" ~spaceOrEnd strikeInner+ strikeClose attrs?
-  strikeInner = ~strikeClose (emph | strong | underline | highlight
-             | rich | word | spaceIn<"~"> | litSelf<"~"> | litDelim | other)
-  strikeClose = "~" ~alnumCh
-
-  // NO bare sup/sub rules: `^` and `,` are always literal outside the
-  // braced forms {^...^} / {,...,} (grammar.ebnf PART 3 rationale note)
-
-  highlight  = "=" ~"=" ~spaceOrEnd hlInner+ hlClose attrs?
-  hlInner = ~hlClose (emph | strong | underline | strike
-             | rich | word | spaceIn<"="> | litSelf<"="> | litDelim | other)
-  hlClose    = "=" ~alnumCh
-
-  // interior space: allowed except directly before this span's closer
-  spaceIn<d> = " " ~(d ~alnumCh)
-  // a same-type delimiter that is not a valid closer is literal content
-  litSelf<d> = d &alnumCh
+  // The bare single-char span productions (emph/strong/underline/strike/
+  // highlight with per-delimiter bare_opener/bare_closer word-boundary guards,
+  // interior-space and litSelf helpers) previously lived here. They resolved
+  // runs by PEG backtracking -- O(n^2) on a long run of unclosed openers. They
+  // are now REPLACED by the O(n) delimiter-stack pass in scripts/spec/render.mjs
+  // (grammar.ebnf PART 9 $9). A bare `/ * _ ~ =` reaches the resolver as a
+  // `litDelim` candidate token; `^` and `,` have no bare span and stay literal.
 
   // Verbatim code span: equal-length maximal backtick runs (Core uses the
   // 1..3 tier; longer runs are out of Core). Single-space strip is applied
@@ -216,8 +208,11 @@ CarveCore {
   forcedSpan = forced<"/"> | forced<"*"> | forced<"_"> | forced<"~">
              | forced<"^"> | forced<","> | forced<"=">
   forced<d>  = "{" d fInner<d>* d "}" attrs?
+  // `looseAttrs` is admitted so a nested bare span's trailing `{...}` attribute
+  // block is consumed here (the removed bare-span rules used to grab it via
+  // their `attrs?`); the SS9 stack over these tokens then re-attaches it.
   fInner<d>  = ~(d "}") (rich | span | word | spComment | inlineSpace | litDelim
-             | bang | dollar | ellipsis | dashRun | dot | dash | plus | pct
+             | looseAttrs | bang | dollar | ellipsis | dashRun | dot | dash | plus | pct
              | lt | gt | dquote | squote | hash | other)
 
   // editorial: {+ins+} {-del-} {~old~>new~} {# comment #} (+ the doubled

@@ -50,12 +50,6 @@ export function checkUrl(url) {
 
 // ---------------------------------------------------------------------------
 // Inline semantics
-function spanOp(tag) {
-  return function (_open, inner, _close, attrs) {
-    const a = renderAttrs(attrsOf(attrs))
-    return `<${tag}${a}>${inner.children.map((c) => c.h()).join('')}</${tag}>`
-  }
-}
 function codeText(content) {
   let text = content.sourceString
   if (/^ .* $/.test(text) && text.trim() !== '') text = text.slice(1, -1)
@@ -156,17 +150,15 @@ function renderAttrs(list) {
 
 const sem = g.createSemantics().addOperation('h', {
   inlines(items) {
-    return items.children.map((c) => c.h()).join('')
+    // The bare single-char emphasis delimiters are NOT resolved by the PEG.
+    // Build a flat token stream (leaf HTML fragments + bare-delimiter
+    // candidates) and run the PART 9 SS9 delimiter-stack pass over it.
+    return resolveEmphasis(buildToks(items.children), this.source.sourceString)
   },
   boldItalic(_o, inner, _c, attrs) {
     const a = renderAttrs(attrsOf(attrs))
     return `<strong${a}><em>${inner.children.map((c) => c.h()).join('')}</em></strong>`
   },
-  emph: spanOp('em'),
-  strong: spanOp('strong'),
-  underline: spanOp('u'),
-  strike: spanOp('s'),
-  highlight: spanOp('mark'),
   code1: codeOp,
   code2: codeOp,
   code3: codeOp,
@@ -265,9 +257,14 @@ const sem = g.createSemantics().addOperation('h', {
     return f.h()
   },
   forced(_ob, d, inner, _d2, _cb, attrs) {
-    const tag = { '/': 'em', '*': 'strong', _: 'u', '~': 's', '^': 'sup', ',': 'sub', '=': 'mark' }[d.sourceString]
+    const dch = d.sourceString
+    const tag = { '/': 'em', '*': 'strong', _: 'u', '~': 's', '^': 'sup', ',': 'sub', '=': 'mark' }[dch]
     const a = renderAttrs(attrsOf(attrs))
-    return `<${tag}${a}>${inner.children.map((c) => c.h()).join('')}</${tag}>`
+    // A forced `{X ... X}` span emphasizes intraword; nested spans of OTHER
+    // delimiters resolve normally, but the forced delimiter X itself stays
+    // literal inside (PART 9 SS22). Run the same SS9 stack, holding X literal.
+    const body = resolveEmphasis(buildToks(inner.children, dch), this.source.sourceString)
+    return `<${tag}${a}>${body}</${tag}>`
   },
   edIns(_o, content, _c, attrs) {
     return `<ins${renderAttrs(attrsOf(attrs))}>${renderInline(content.sourceString, '{')}</ins>`
@@ -434,15 +431,144 @@ sem.addOperation('parseAttrs', {
   },
 })
 
-// --- PART 9 SS9 E1-E5 delimiter-stack pre-scan -----------------------------
-// A PEG's ordered choice resolves emphasis by nesting, not by the spec's
-// close-first-wins rule. The two agree UNLESS a closer matches a non-top
-// stack entry (E2 demotion, i.e. overlapping candidate spans). Detect that
-// case with a faithful mini stack-scan and REFUSE it - the executable spec
-// never silently diverges from the delimiter-stack semantics.
-const DELIMS = new Set(['/', '*', '_', '~', '='])
+// --- PART 9 SS9 E1-E5 delimiter-stack resolver -----------------------------
+// grammar.ebnf PART 9 SS9 specifies emphasis resolution as ONE left-to-right
+// pass over the inline stream with a delimiter stack -- O(n), NO backtracking.
+// This REPLACES the former backtracking PEG span rules (which re-searched the
+// tail for a closer at every opener -> O(n^2) on a run of unclosed openers).
+// The Ohm grammar now tokenizes bare `/ * _ ~ =` into `litDelim` candidate
+// tokens; this resolver pairs them into spans.
+const STACK_DELIMS = new Set(['/', '*', '_', '~', '='])
+const TAG = { '/': 'em', '*': 'strong', _: 'u', '~': 's', '=': 'mark' }
 const isWordCh = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c)
 const isWs = (c) => c === undefined || /\s/.test(c)
+
+// The formal word-boundary guard templates (grammar.ebnf PART 3):
+//   bare_opener(d) = <!(alnum | '_' | d), d, !(ws | d)
+//   bare_closer(d) = <&(non_ws), d, !(alnum)
+// END counts as whitespace (a run may not open at end of block); a following
+// same delimiter is allowed for a closer (`/x//` -> the first `/` after x
+// closes; the trailing `/` stays literal).
+function bareOpener(d, prev, next) {
+  const prevOk = prev === undefined || !(isWordCh(prev) || prev === '_' || prev === d)
+  return prevOk && !isWs(next) && next !== d
+}
+function bareCloser(d, prev, next) {
+  return prev !== undefined && !isWs(prev) && (next === undefined || !isWordCh(next))
+}
+
+// Build the flat token stream from a list of CST child nodes (inline* or
+// fInner*). A bare `/ * _ ~ =` becomes a delimiter candidate; every other
+// alternative renders to an HTML fragment now. `literalDelim` (the forced
+// span's own delimiter, if any) is held literal rather than made a candidate.
+function buildToks(children, literalDelim) {
+  const toks = []
+  for (const c of children) {
+    const alt = c.child(0)
+    const name = alt.ctorName
+    if (name === 'litDelim') {
+      const ch = alt.sourceString
+      // Only / * _ ~ = are stack candidates; ^ and , have no bare span.
+      if (STACK_DELIMS.has(ch) && ch !== literalDelim) {
+        toks.push({ k: 'd', ch, at: alt.source.startIdx })
+        continue
+      }
+      toks.push({ k: 't', h: escapeHtml(ch) })
+      continue
+    }
+    if (name === 'looseAttrs') {
+      // A trailing `{...}` block may attach to a resolved span; if it does
+      // not, it renders as its literal fallback (alt.h()).
+      toks.push({ k: 'attrs', node: alt, at: alt.source.startIdx, h: alt.h() })
+      continue
+    }
+    toks.push({ k: 't', h: c.h() })
+  }
+  return toks
+}
+
+// Resolve a flat token stream (leaf HTML fragments interleaved with bare
+// delimiter candidates) into rendered HTML. `toks` items are one of:
+//   { k: 'd', ch, at }      a bare delimiter candidate (source index `at`)
+//   { k: 'attrs', node, at, h }  a trailing `{...}` block (may attach to a span)
+//   { k: 't', h }           an already-rendered leaf fragment
+function resolveEmphasis(toks, src) {
+  // E1 CLASSIFY: evaluate bare_opener(d) / bare_closer(d) at each candidate.
+  for (const t of toks) {
+    if (t.k !== 'd') continue
+    const prev = t.at > 0 ? src[t.at - 1] : undefined
+    const next = src[t.at + 1]
+    t.canOpen = bareOpener(t.ch, prev, next)
+    t.canClose = bareCloser(t.ch, prev, next)
+  }
+  // One pass with a delimiter stack. `openers` holds indices (into toks) of
+  // still-open candidates, in source order. `openMap` records paired spans.
+  const openers = []
+  const openMap = new Map() // open index -> close index
+  for (let j = 0; j < toks.length; j++) {
+    const t = toks[j]
+    if (t.k !== 'd') continue
+    const d = t.ch
+    // E2 CLOSE FIRST: a valid closer closes the NEAREST matching open entry;
+    // entries pushed above it are popped and demoted to literal (spans nest,
+    // never overlap).
+    if (t.canClose) {
+      let k = -1
+      for (let s = openers.length - 1; s >= 0; s--) {
+        if (toks[openers[s]].ch === d) {
+          k = s
+          break
+        }
+      }
+      if (k !== -1) {
+        openMap.set(openers[k], j)
+        openers.length = k // demote the entries above the matched opener
+        continue
+      }
+    }
+    // E4 OPEN, subject to E3 (no same-type nesting): while a d-span is open,
+    // a further d does not push -- it is literal content.
+    if (t.canOpen && !openers.some((oi) => toks[oi].ch === d)) {
+      openers.push(j)
+      continue
+    }
+    // E1 / E5 literal: candidate left unpaired (rendered as its literal char).
+  }
+  // Build the span tree by walking the paired ranges (properly nested).
+  const consumed = new Set() // attrs tokens attached to a span
+  const renderRange = (lo, hi) => {
+    let out = ''
+    let i = lo
+    while (i < hi) {
+      const t = toks[i]
+      if (t.k === 'd' && openMap.has(i)) {
+        const closeIdx = openMap.get(i)
+        const inner = renderRange(i + 1, closeIdx)
+        // A `{...}` block immediately after the closer attaches as attributes.
+        let attrsStr = ''
+        const after = closeIdx + 1
+        if (
+          after < toks.length &&
+          toks[after].k === 'attrs' &&
+          toks[after].at === toks[closeIdx].at + 1
+        ) {
+          attrsStr = renderAttrs(toks[after].node.parseAttrs())
+          consumed.add(after)
+        }
+        out += `<${TAG[t.ch]}${attrsStr}>${inner}</${TAG[t.ch]}>`
+        i = closeIdx + 1
+        continue
+      }
+      if (t.k === 'd') out += escapeHtml(t.ch)
+      else if (t.k === 'attrs') {
+        if (!consumed.has(i)) out += t.h
+      } else out += t.h
+      i++
+    }
+    return out
+  }
+  return renderRange(0, toks.length)
+}
 
 // grammar.ebnf PART 26: every container FLATTENS/refuses rather than crashing;
 // MAX_NESTING_DEPTH bounds recursion so the pipeline stays linear-time and
@@ -452,8 +578,8 @@ const MAX_NESTING_DEPTH = 200
 // The Ohm `bracketed`/`nested` rules recurse once per open bracket. A run of
 // unmatched/deeply-nested `[` would blow the JS call stack inside g.match with
 // a raw RangeError. Pre-scan the maximum simultaneous `[` nesting (skipping
-// escapes and verbatim spans, exactly as overlapScan does) and REFUSE past the
-// bound -- a legitimate refusal, not a crash.
+// escapes and verbatim spans) and REFUSE past the bound -- a legitimate
+// refusal, not a crash.
 function bracketDepthExceeds(text, limit) {
   let depth = 0
   for (let i = 0; i < text.length; i++) {
@@ -475,40 +601,6 @@ function bracketDepthExceeds(text, limit) {
     } else if (c === ']') {
       if (depth > 0) depth--
     }
-  }
-  return false
-}
-
-function overlapScan(text) {
-  const stack = []
-  for (let i = 0; i < text.length; i++) {
-    const c = text[i]
-    if (c === '\\') {
-      i++
-      continue
-    }
-    if (c === '`') {
-      // skip a verbatim span (equal-run close)
-      let run = 1
-      while (text[i + run] === '`') run++
-      const close = text.indexOf('`'.repeat(run), i + run)
-      i = close === -1 ? text.length : close + run - 1
-      continue
-    }
-    if (!DELIMS.has(c)) continue
-    const prev = text[i - 1]
-    const next = text[i + 1]
-    if (prev === c || next === c) continue // same-delimiter adjacency: literal
-    const canOpen = !isWs(next) && !isWordCh(prev) && prev !== '_'
-    const canClose = !isWs(prev) && !isWordCh(next)
-    const top = stack.length ? stack[stack.length - 1] : null
-    const idx = stack.lastIndexOf(c)
-    if (canClose && idx !== -1) {
-      if (idx !== stack.length - 1) return true // E2 demotion -> overlap
-      stack.pop()
-      continue
-    }
-    if (canOpen && !stack.includes(c)) stack.push(c) // E3: no same-type nesting
   }
   return false
 }
@@ -622,7 +714,8 @@ export function renderInline(text, prevCtx = '') {
 }
 
 function renderInlineInner(text) {
-  if (overlapScan(text)) throw new Refuse('overlapping emphasis (delimiter-stack close-first rule)')
+  // Emphasis is resolved by the PART 9 SS9 delimiter stack in the `inlines`
+  // semantic (resolveEmphasis) -- no pre-scan / refusal needed here.
   if (bracketDepthExceeds(text, MAX_NESTING_DEPTH)) throw new Refuse('inline nesting exceeds MAX_NESTING_DEPTH')
   const m = g.match(text, 'inlines')
   if (m.failed()) throw new Refuse(`inline: ${m.shortMessage}`)
