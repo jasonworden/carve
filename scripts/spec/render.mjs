@@ -444,14 +444,21 @@ const isWordCh = (c) => c !== undefined && /[\p{L}\p{N}]/u.test(c)
 const isWs = (c) => c === undefined || /\s/.test(c)
 
 // The formal word-boundary guard templates (grammar.ebnf PART 3):
-//   bare_opener(d) = <!(alnum | '_' | d), d, !(ws | d)
+//   bare_opener(d) = <!(alnum | '_' | d | slash_if(d)), d, !(ws | d)
 //   bare_closer(d) = <&(non_ws), d, !(alnum)
 // END counts as whitespace (a run may not open at end of block); a following
 // same delimiter is allowed for a closer (`/x//` -> the first `/` after x
 // closes; the trailing `/` stays literal).
+// slash_if(d) = '/' for d in { '/', '_' }: italic and underline additionally
+// never open when the immediately preceding character is `/` -- for `/` this
+// coincides with same-delimiter adjacency, for `_` it is the extra
+// cross-delimiter guard the reference engines apply (path protection:
+// /a/_b_, snake_/case/, a_/_a_). The other delimiters `* ~ =` DO open after
+// `/` (e.g. `a/~y~` -> `a/<s>y</s>`), so the guard is `/ _`-specific.
 function bareOpener(d, prev, next) {
-  const prevOk = prev === undefined || !(isWordCh(prev) || prev === '_' || prev === d)
-  return prevOk && !isWs(next) && next !== d
+  if (prev !== undefined && (isWordCh(prev) || prev === '_' || prev === d)) return false
+  if ((d === '/' || d === '_') && prev === '/') return false
+  return !isWs(next) && next !== d
 }
 function bareCloser(d, prev, next) {
   return prev !== undefined && !isWs(prev) && (next === undefined || !isWordCh(next))

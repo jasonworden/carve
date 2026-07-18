@@ -1099,14 +1099,23 @@ math_display = "$$", code_span ;
    NOTATION, header) instantiated for every bare delimiter
    d in { '/', '*', '_', '~', '=' } (all single-char): *)
 
-bare_opener(d) = <!(alnum | '_' | d), d, !(ws | d) ;
+bare_opener(d) = <!(alnum | '_' | d | slash_if(d)), d, !(ws | d) ;
 bare_closer(d) = <&(non_ws), d, !(alnum) ;
+
+(* slash_if(d) = '/' when d in { '/', '_' }, otherwise nothing: italic and
+   underline additionally never open when the char immediately before d is `/`
+   (PART 9 §9 -- path protection: /a/_b_, snake_/case/, a_/_a_). For d = '/'
+   this coincides with same-delimiter adjacency; for d = '_' it is the extra
+   cross-delimiter guard. The other delimiters '*', '~', '=' are NOT guarded
+   against a preceding '/', so a/~y~ -> a/<s>y</s>. *)
 
 (* Reading:
    - opener: the char BEFORE d is START, whitespace, or punctuation -- but
-     NOT an alphanumeric, NOT `_`, and NOT the same delimiter
+     NOT an alphanumeric, NOT `_`, NOT the same delimiter
      (same-delimiter adjacency, PART 9 §9: a doubled delimiter never
-     opens); d is NOT followed by whitespace and NOT by another d.
+     opens), and -- for d in { '/', '_' } only -- NOT `/`
+     (slash_if(d), path protection); d is NOT followed by whitespace and NOT
+     by another d.
    - closer: d is NOT preceded by whitespace and NOT followed by an
      alphanumeric. (A following same-delimiter is allowed: in `/x//` the
      first `/` after `x` closes; the trailing `/` stays literal.)
@@ -1767,7 +1776,13 @@ EOF = (* end of file *) ;
       nested same-type emphasis: `**x**`, `~~x~~`, `==x==` like `//x//`,
       `__x__` (corpus 74-doubled-emphasis-delimiters, 01-emphasis-11);
       longer runs (`===y===`) all-literal. (The braced-only `^`/`,` are not
-      bare, so `^^x^^` and `,,x,,` are likewise literal.) WORD BOUNDARY: (/x/) ->
+      bare, so `^^x^^` and `,,x,,` are likewise literal.) SLASH-ADJACENCY
+      (slash_if(d), bare_opener's extra left guard): italic `/` and underline
+      `_` do NOT open when the immediately preceding char is `/`, so `a_/_a_`,
+      `a/_y_` and `/a/_b_` -> <em>a</em>_b_ stay literal at the `_`; for `/`
+      this is same-delimiter adjacency. The other delimiters `* ~ =` are NOT
+      guarded against a preceding `/` (a/~y~ -> a/<s>y</s>, a/=y= ->
+      a/<mark>y</mark>) (corpus 127-emphasis-opener-slash-adjacency). WORD BOUNDARY: (/x/) ->
       (<em>x</em>), a./b/ -> a.<em>b</em> (01-emphasis-8); foo_bar_baz,
       foo*bar*baz, snake_case, x = 5, key=value literal (01-emphasis-10,
       -11); "x /a/b y" literal -- the candidate closer is followed by `b`
