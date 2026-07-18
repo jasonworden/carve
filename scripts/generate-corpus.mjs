@@ -25,18 +25,38 @@ let currentLang = null
 let fenceMarker = null
 let compareMarker = null
 let blockLines = []
+const seenTitles = new Set()
+let comparesOpened = 0
+let compareOpenLine = 0
+const dropped = []
 
 const finalizePair = () => {
   if (currentSection && pendingBlocks.carve && pendingBlocks.html) {
     examples.push({ section: currentSection, carve: pendingBlocks.carve, html: pendingBlocks.html })
+  } else if (currentSection) {
+    // A compare block that closed without BOTH a carve and an html fence would
+    // otherwise vanish from the corpus with no signal (the observability
+    // lesson). Record it so the run can fail loudly below.
+    const miss = [!pendingBlocks.carve && 'carve', !pendingBlocks.html && 'html']
+      .filter(Boolean)
+      .join(' + ')
+    dropped.push(`line ${compareOpenLine} (section "${currentSection}"): missing ${miss} fence`)
   }
   pendingBlocks = { carve: null, html: null }
 }
 
-for (const line of lines) {
+for (let li = 0; li < lines.length; li++) {
+  const line = lines[li]
   const h2 = line.match(/^##\s+(.+?)\s*$/)
   if (h2 && mode === 'scanning') {
     currentSection = h2[1]
+    // Section numbering keys on the title, so two files sharing a title would
+    // silently merge their examples into one numbered section.
+    if (seenTitles.has(currentSection)) {
+      console.error(`generate-corpus: duplicate section title "${currentSection}" across example files - numbering would merge them.`)
+      process.exit(1)
+    }
+    seenTitles.add(currentSection)
     pendingBlocks = { carve: null, html: null }
     continue
   }
@@ -45,6 +65,8 @@ for (const line of lines) {
   const compareOpen = mode === 'scanning' && /^:{3,}\s+compare(\s+\S.*)?$/.test(line.trim())
   if (compareOpen) {
     compareMarker = line.trim().match(/^(:{3,})/)[1]
+    comparesOpened++
+    compareOpenLine = li + 1
     mode = 'in_compare'
     continue
   }
@@ -74,6 +96,20 @@ for (const line of lines) {
     }
     blockLines.push(line)
   }
+}
+
+// Reconcile: every opened compare block must have produced a pair. A silent
+// gap here means a broken example dropped out of the conformance corpus.
+if (dropped.length) {
+  console.error(`generate-corpus: ${dropped.length} ::: compare block(s) produced no corpus pair:`)
+  for (const d of dropped) console.error(`  - ${d}`)
+  process.exit(1)
+}
+if (comparesOpened !== examples.length) {
+  console.error(
+    `generate-corpus: ${comparesOpened} compare blocks opened but ${examples.length} pairs written (unclosed block?).`,
+  )
+  process.exit(1)
 }
 
 mkdirSync(outDir, { recursive: true })

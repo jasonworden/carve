@@ -91,7 +91,12 @@ export default {
           void renderMathIn(document.body)
         })
       }
-      router.onAfterRouteChanged = run
+      // Chain rather than clobber, in case another hook is already installed.
+      const prevHook = router.onAfterRouteChanged
+      router.onAfterRouteChanged = (...args) => {
+        prevHook?.(...args)
+        run()
+      }
       run()
     }
   },

@@ -38,11 +38,13 @@ execSync('npm run build', { cwd: carveJsRoot, stdio: 'inherit' })
 const distDir = resolve(carveJsRoot, 'dist')
 mkdirSync(libDir, { recursive: true })
 
-// Clear existing js/d.ts files (preserve README)
+// Clear existing vendored files (preserve README). The copy loop below copies
+// every file in dist/, so clear every file too - a predicate that only removed
+// .js/.d.ts/.map would leave stale artifacts of any other extension behind.
 for (const f of readdirSync(libDir)) {
-  if (f.endsWith('.js') || f.endsWith('.d.ts') || f.endsWith('.map')) {
-    unlinkSync(resolve(libDir, f))
-  }
+  if (f === 'README.md') continue
+  const p = resolve(libDir, f)
+  if (statSync(p).isFile()) unlinkSync(p)
 }
 
 let count = 0
