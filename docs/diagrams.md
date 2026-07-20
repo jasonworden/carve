@@ -9,7 +9,7 @@ Carve draws diagrams from **fenced code blocks**. The diagram stays plain text i
 your source - no binary image to keep in sync, no ASCII art to hand-align - and a
 client library or a build step turns it into real vector output.
 
-```carve
+````carve
 ``` mermaid
 classDiagram
   class Parser {
@@ -19,7 +19,7 @@ classDiagram
   Parser --> Document : produces
   Document <|-- Section
 ```
-```
+````
 
 That is the whole authoring story. Everything below is about which languages are
 available and who does the drawing.
@@ -54,7 +54,7 @@ Mermaid covers most of UML directly:
 | Entity relationship | `erDiagram` |
 | Activity | `flowchart` / `graph` |
 
-```carve
+````carve
 ``` mermaid
 sequenceDiagram
   participant U as User
@@ -62,7 +62,7 @@ sequenceDiagram
   U->>P: parse(source)
   P-->>U: Document
 ```
-```
+````
 
 Use-case, component, deployment and timing diagrams are **not** covered by
 Mermaid. There is currently no PlantUML preset; for those diagram types, render

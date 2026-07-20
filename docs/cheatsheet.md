@@ -183,7 +183,7 @@ block comment
 Fenced blocks drawn by a client library or a build step. Fence words: `mermaid`,
 `d2`, `graphviz`, `wavedrom`, `abc`, `vega-lite`, `chart`.
 
-```carve
+````carve
 ``` mermaid
 classDiagram              (UML: classDiagram, sequenceDiagram,
   Parser --> Document      stateDiagram-v2, erDiagram)
@@ -192,7 +192,7 @@ classDiagram              (UML: classDiagram, sequenceDiagram,
 ``` chart
 {"type":"bar","data":{"labels":["a","b"],"datasets":[{"data":[1,2]}]}}
 ```
-```
+````
 
 Extension, off by default; falls back to a code block when unrendered. See
 **[Diagrams & Charts](/diagrams)**.
