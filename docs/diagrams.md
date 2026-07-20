@@ -103,6 +103,21 @@ self-contained `data:` image URI, so if you sanitize the static HTML afterwards,
 Working per-engine recipes are in
 [Static Rendering Recipes](/static-rendering-recipes).
 
+## Seeing it rendered
+
+This page shows the source and the markup Carve emits, not the drawn diagram -
+the docs site does not hydrate diagrams outside the playground. To see real
+output:
+
+- **[Playground](/playground)** - paste a `mermaid` fence and it renders live in
+  the browser, the same way a host page would hydrate it.
+- **[carve-pdf `03-math-diagrams.pdf`](https://github.com/markup-carve/carve-pdf/blob/master/examples/03-math-diagrams.pdf)** -
+  a real PDF built from
+  [`03-math-diagrams.crv`](https://github.com/markup-carve/carve-pdf/blob/master/examples/03-math-diagrams.crv),
+  with Mermaid flowcharts, KaTeX math and a Chart.js chart all drawn at print
+  time. Source and output side by side, for a target with no client-side
+  JavaScript at view time.
+
 ## Degradation
 
 When the extension is off, or no renderer is supplied for that key, the fence
