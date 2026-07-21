@@ -181,7 +181,7 @@ block comment
 ## Diagrams & charts
 
 Fenced blocks drawn by a client library or a build step. Fence words: `mermaid`,
-`d2`, `graphviz`, `wavedrom`, `abc`, `vega-lite`, `chart`.
+`d2`, `graphviz`, `wavedrom`, `abc`, `plantuml` (`puml`), `vega-lite`, `chart`.
 
 ````carve
 ``` mermaid

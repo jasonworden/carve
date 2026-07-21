@@ -26,7 +26,7 @@ available and who does the drawing.
 
 ## Available presets
 
-All seven are instances of one extension, `FencedRender`: a renderer claims a
+All eight are instances of one extension, `FencedRender`: a renderer claims a
 fenced block by its language word and emits a single hydration element.
 
 | Fence word | Draws | Mode |
@@ -36,6 +36,7 @@ fenced block by its language word and emits a single hydration element.
 | `graphviz` (`dot`) | directed / undirected graphs | text |
 | `wavedrom` | digital timing diagrams, register maps | text |
 | `abc` | musical notation | text |
+| `plantuml` (`puml`) | the full UML set (use-case, component, deployment, timing, …) | text |
 | `vega-lite` | statistical charts from a grammar-of-graphics spec | json |
 | `chart` | Chart.js charts | json |
 
@@ -65,15 +66,24 @@ sequenceDiagram
 ````
 
 Use-case, component, deployment and timing diagrams are **not** covered by
-Mermaid. There is currently no PlantUML preset; for those diagram types, render
-externally and embed the result as an image.
+Mermaid. For those, use the `plantuml` preset (also claimed as `puml`), which
+carries the full UML set:
+
+````carve
+``` plantuml
+@startuml
+actor User
+User --> (Parse source)
+@enduml
+```
+````
 
 ## What Carve emits
 
 Carve emits only the marker element. Loading the client library and hydrating it
 is the host's job.
 
-**Text mode** (Mermaid, D2, Graphviz, WaveDrom, ABC) escapes the body inside a
+**Text mode** (Mermaid, D2, Graphviz, WaveDrom, ABC, PlantUML) escapes the body inside a
 `<pre>`. Note that `&` and `<` are escaped but `>` is preserved, so arrow syntax
 like `-->` survives intact:
 

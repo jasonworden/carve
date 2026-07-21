@@ -67,7 +67,7 @@ differs by processor. The narrative below details each tier.
   locale smart-quote sets, bare-URL autolinking, citations (§4), and code
   callouts (`<n>` markers inside fenced code + a bound explanation list; §10).
 - Tier 3 (non-exhaustive): FencedRender (a generic fenced-code-block factory
-  with Mermaid, D2, Graphviz, WaveDrom, ABC, Vega-Lite and Chart.js presets),
+  with Mermaid, D2, Graphviz, WaveDrom, ABC, PlantUML, Vega-Lite and Chart.js presets),
   MathBlock (a ` ```math ` fenced block →
   `<div class="math display">`, the GFM-style block form of Carve's `$…$`
   math), ListTable (a `::: list-table` div whose nested list renders as a real
@@ -106,10 +106,10 @@ differs by processor. The narrative below details each tier.
   `FencedRender` is the generic form of the Mermaid pattern: one configurable
   renderer claims fenced code blocks by language word and emits a single
   client-hydration element. In **text** mode (Mermaid, D2, Graphviz, WaveDrom,
-  ABC) the body is HTML-escaped inside `<pre class="lang">…</pre>`, with `&` and
+  ABC, PlantUML) the body is HTML-escaped inside `<pre class="lang">…</pre>`, with `&` and
   `<` escaped but `>` preserved so arrow syntax (`-->`) survives; in **json**
   mode (Vega-Lite, Chart.js) the body is emitted verbatim inside
-  `<div class="lang"><script type="application/json">…</script></div>`. The seven
+  `<div class="lang"><script type="application/json">…</script></div>`. The eight
   named presets are one-liners, and any other client-rendered language needs no
   new code - just a new instance with its fence word. Carve only emits the
   marker element; loading the client library and hydrating it is the host's job.
