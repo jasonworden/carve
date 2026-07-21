@@ -628,12 +628,13 @@ See </#eq-emc>.
 ## Diagrams and charts
 
 `FencedRender` claims a fenced code block by its language word and emits a single
-hydration element for a client library to draw. Seven presets ship: `mermaid`,
-`d2`, `graphviz`, `wavedrom` and `abc` (text mode), plus `vega-lite` and `chart`
-(json mode).
+hydration element for a client library to draw. Eight presets ship: `mermaid`,
+`d2`, `graphviz`, `wavedrom`, `abc` and `plantuml` (text mode; `plantuml` also
+claims `puml`), plus `vega-lite` and `chart` (json mode).
 
 Mermaid covers most of UML - `classDiagram`, `sequenceDiagram`, `stateDiagram-v2`
-and `erDiagram`:
+and `erDiagram` - and `plantuml` / `puml` is the dedicated PlantUML preset for
+the full UML set:
 
 ````carve
 ``` mermaid
