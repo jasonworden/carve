@@ -31,6 +31,15 @@ identifiers, independent of a renderer's output tag.
 `span`, `superscript`, `subscript`, `highlight`, `insert`, `delete`, `symbol`,
 `math`, `abbreviation`.
 
+The inline literal of PART 9 §27 (`` !`…` ``) is classified as **`code`** for
+profiles — it is a code span with the `<code>` wrapper dropped, sharing code's
+verbatim capture, escaping, and trailing-attribute surface, so it is allowed
+exactly where `code` is and denied where `code` is. (Types are trust classes,
+not one per AST node: `inline_footnote` and `footnote_ref` likewise fold into
+`footnote`.) It is not classified as `text`: with attributes it renders a
+`<span>` carrying class/id/style just as an attributed code span does, which is
+`code`'s trust level, not plain text's.
+
 The `document` root is always allowed and cannot be denied.
 
 ## The profile model
@@ -111,6 +120,11 @@ User comments: basic formatting, `nofollow`/`ugc` links.
 - `maxLength`: `100000` (100 KB) input-size cap; override via `setMaxLength(0)` to disable.
 - (So: no headings, images, tables, footnotes, divs/sections, def-lists,
   thematic breaks, line blocks, spans, symbols, math, abbreviations, raw HTML.)
+
+  Inline literals (`` !`…` ``) ARE permitted here: they classify as `code`,
+  which this preset allows, and an attributed literal carries the same
+  class/id/style an attributed code span already does under this preset. A host
+  that wants to forbid them must deny `code`.
 
 ### `minimal`
 Chat/micro-posts: non-destructive inline formatting, paragraphs and lists.
