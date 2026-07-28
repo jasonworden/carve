@@ -3,7 +3,8 @@
 Carve starts from [Djot](https://djot.net) - John MacFarlane's predictable,
 backtracking-free reimagining of Markdown - and keeps almost all of it: the
 linear parse model, generic containers, arbitrary attributes, footnotes, math,
-and smart typography all carry over unchanged. Definition lists are one of the
+and smart typography all carry over - the last of those with the same rules but
+a smaller AST shape (see section 12 below). Definition lists are one of the
 deliberate breaks (see section 9 below).
 
 So why diverge at all? Because a handful of Djot's choices optimize for
@@ -393,6 +394,90 @@ its residual spaces and, like ` # h`, is paragraph text rather than a block.
 Djot instead attaches at any indent, which means a block one space under the
 marker - visually left of the item's own text - still becomes a child. The
 `+` continuation marker (§3) still attaches a flush-left block regardless.
+
+## 12. Smart punctuation is one leaf node, not three container types
+
+Both languages agree on the important half: a typographic substitution has to be
+*represented* in the AST, or the formatter cannot reproduce what the author
+typed. The substitution rules are also the same - unconditional, per-character
+quote direction from the preceding character, `\"` for a literal. The divergence
+is the shape of the representation.
+
+**Djot:** three types. `double_quoted` and `single_quoted` are *containers* that
+wrap the quoted content, and `smart_punctuation` is a leaf retaining the source
+text for dashes and ellipses.
+
+**Carve:** one type. `smart_punctuation` is always a leaf, carrying the resolved
+`kind` (`ellipsis`, `em_dash`, `left_double_quote`, …) and the author's source
+run (`...`, `--`, `"`). A quote node additionally carries its resolved glyph,
+because the glyph is locale-dependent and is decided during parsing. A dash run
+becomes one node per resolved glyph, each holding the hyphens it came from, so
+`----` round-trips to exactly four hyphens.
+
+Renderers split on which half they read: HTML, Markdown, plain text and ANSI
+emit the glyph; the canonical Carve writer emits the source run. That is what
+makes `carve fmt` non-destructive - formatting `He said "hello"` writes back
+`He said "hello"`, not the curly form.
+
+**Why one leaf instead of two containers.** A container type says the quotes
+have *scope*, and in Carve they do not. Quote direction is decided per character
+from what precedes it, so an unpaired quote is completely ordinary and `a"b` is
+just a right quote mid-word - there is no span to wrap. Making quotes containers
+would force every walker to handle a node whose children are the quoted prose,
+turn a link label containing a quote into a nested container rather than a
+string, and raise the question of what an unmatched opener contains. A leaf
+carrying both halves buys the same round-trip with none of that.
+
+For [profiles](/profiles) the node is classified as `text`: it is visible prose
+with no capability of its own, so it is not separately nameable.
+
+### Turning it off
+
+The transform runs with no extension registered. A smart-quotes / locale
+extension picks *which* glyphs are emitted, not *whether* the substitution
+happens - removing it does not turn the transform off.
+
+Hosts may offer one document-global switch, `smartTypography` (default `true`).
+With the node representation above, turning it off is a rendering decision
+rather than a parsing one: the nodes are still produced, and the presentation
+renderers emit each node's source run instead of its glyph, exactly as the
+canonical writer already does. The AST does not depend on the switch; the output
+is the author's ASCII across the whole converted set - dashes, ellipsis, quotes,
+arrows, comparisons, `(c)` `(r)` `(tm)` `+-`:
+
+::: code-group
+
+```js [carve-js]
+carveToHtml(source, { smartTypography: false })
+```
+
+```php [carve-php]
+$converter = CarveConverter::create(smartTypography: false);
+```
+
+```rust [carve-rs]
+let options = Options::default().with_smart_typography(false);
+```
+
+:::
+
+The switch is document-global on purpose. Defaulting it per target - on for
+HTML, off for Markdown and plain text - was considered and rejected: one source
+must carry the same text on every target, and a target-dependent default would
+let `to_html(x)` and `to_markdown(x)` disagree about what the document says.
+
+Turning it off is for **machine-facing** output: a corpus rendered to Markdown
+or plain text for a model to read, generated documentation that has to stay
+diff-stable, or anything re-parsed downstream, where a curly quote is a
+character the consumer did not ask for and cannot reverse. For output aimed at
+human readers - which is the default case - leave it on.
+
+The switch changes nothing else. Escapes still work (`\"` yields a straight
+quote either way) and `:name:` symbols are untouched. Heading ids are
+byte-identical in both modes: the id pass normalizes typographic output back to
+ASCII before slugging (section 1 above), so `# Don't repeat yourself` gives
+`Don-t-repeat-yourself` whether the heading
+renders with a curly apostrophe or a straight one.
 
 ## What Carve adds on top (not breaks)
 
