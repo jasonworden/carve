@@ -12,11 +12,11 @@
  *     reformatted from tight to loose (carve-rs#286).
  *
  *   - The BYTES (PART 11 §2, §4) pin the escaping decision itself. They were
- *     skipped while no engine implemented minimal escaping; the vendored
- *     carve-lib does now (carve-js#397), and it reproduces them exactly apart
- *     from the two conservative-form cases noted below. The fixtures were derived from PART 11 rather than from any
- *     writer's output, so this is a check of the engine against the spec, not
- *     of the engine against itself.
+ *     skipped while no engine implemented minimal escaping; the pinned carve-js
+ *     build does now (carve-js#397), and it reproduces them exactly apart from
+ *     the two conservative-form cases noted below. The fixtures were derived
+ *     from PART 11 rather than from any writer's output, so this is a check of
+ *     the engine against the spec, not of the engine against itself.
  */
 
 import { test } from 'node:test'
@@ -24,7 +24,7 @@ import assert from 'node:assert/strict'
 import { readFileSync, readdirSync } from 'node:fs'
 import { basename, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { carveToCarve, parse } from '../docs/.vitepress/carve-lib/index.js'
+import { carveToCarve, parse } from '@markup-carve/carve'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const dir = resolve(here, 'corpus-roundtrip')
