@@ -5645,3 +5645,116 @@ $$```x `` y```
 ```
 
 :::
+
+## Only the id hoists to the section wrapper
+
+On a top-level heading the id moves to the `<section>` and every other attribute
+stays on the `<h*>` - identically whether the id was slugged from the heading
+text or written as `{#id}`. Worth pinning because djot resolved the same question
+the other way (all attributes migrate) and then implemented that resolution only
+for the explicit-id case, so its two cases disagree (`jgm/djot.js#144`). Carve's
+agree, and that is what keeps the rule stable when the wrapper is switched off:
+the id returns to the `<h*>` and nothing else moves.
+
+::: compare
+
+```carve
+{a=b .c}
+# Auto slug
+
+{a=b .c #explicit}
+# Written id
+```
+
+```html
+<section id="Auto-slug">
+  <h1 a="b" class="c">Auto slug</h1>
+</section>
+<section id="explicit">
+  <h1 a="b" class="c">Written id</h1>
+</section>
+```
+
+:::
+
+## Headings inside containers are not wrapped
+
+A `<section>` models this document's own outline, so only top-level headings open
+one. A heading inside a blockquote, div, or list item emits a bare `<h*>` with
+its id on the heading itself. The ids are still assigned, still share the one
+document-order dedup namespace with top-level headings, and are still `</#id>`
+crossref targets - only the wrapper and the id's emission site differ.
+
+::::: compare
+
+```carve
+> # Quoted
+>
+> Quoted body.
+
+:::
+# Divved
+:::
+
+- # In an item
+
+  Item body.
+```
+
+```html
+<blockquote>
+  <h1 id="Quoted">Quoted</h1>
+  <p>Quoted body.</p>
+</blockquote>
+<div>
+  <h1 id="Divved">Divved</h1>
+</div>
+<ul>
+  <li>
+    <h1 id="In-an-item">In an item</h1>
+    <p>Item body.</p>
+  </li>
+</ul>
+```
+
+:::::
+
+## Attribute order on an unwrapped heading
+
+A heading that carries no `<section>` wrapper emits its id on the `<h*>`, which
+puts a generated attribute next to authored ones. The author's order is never
+rearranged; the engine-minted id joins at the end. An id the author wrote is not
+generated, so it keeps its authored position instead.
+
+Worth pinning because the combination was previously unreachable except through
+a container, and no case gave such a heading attributes - so all three engines
+picked different answers here and every one of them stayed green (PART 10 §1).
+
+::::: compare
+
+```carve
+> {a=b .c}
+> # Auto
+
+> {#x a=b}
+> # Written
+
+:::
+{a=b .c}
+# Divved
+:::
+```
+
+```html
+<blockquote>
+  <h1 a="b" class="c" id="Auto">Auto</h1>
+</blockquote>
+<blockquote>
+  <h1 id="x" a="b">Written</h1>
+</blockquote>
+<div>
+  <h1 a="b" class="c" id="Divved">Divved</h1>
+</div>
+```
+
+:::::
