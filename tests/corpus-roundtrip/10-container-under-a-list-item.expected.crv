@@ -1,6 +1,6 @@
-:::::: wrapper
-::::: outer
-:::: note
+::: wrapper
+:::: outer
+::::: note
 Outer note.
 
 - item one
@@ -10,6 +10,6 @@ Outer note.
   :::
 
 - item two
-::::
 :::::
-::::::
+::::
+:::

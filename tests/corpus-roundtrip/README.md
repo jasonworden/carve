@@ -32,13 +32,21 @@ silently become a mention.
 
 `09` and `10` pin **container fence width**, which is the other thing a writer
 can get wrong without touching a single character of text. A colon fence closes
-on a bare fence of equal-or-greater length, so a container has to be wider than
-every container anywhere below it, not just wider than its direct children.
-`09` nests three of them (div, admonition, line block); `10` nests four and puts
-the innermost one under a list item, where a writer that walks only direct child
-blocks cannot see it. Both documents came back from `fmt` with equal-width
-fences before the writers were fixed, which silently unnests the middle
-container - the failure these two exist to catch.
+on an EXACT length match, so fence width is a depth count: the outermost
+container is `:::` and each level inward adds a colon. `09` nests three of them
+(div, admonition, line block) and pins that count.
+
+`10` pins where the count STOPS. Its innermost container sits under a list item,
+and a list item is a prefix/indent host: the fence lines inside it are indented,
+and the closer pattern is anchored at the start of the line, so an indented bare
+fence cannot close anything above it. The depth therefore restarts inside the
+host - that container comes back as `:::`, not as the sixth level it sits at.
+
+Both inputs are written the OTHER way round, widest-outer, which is how these
+documents were written before the closer rule became exact. That is deliberate:
+they parse identically under exact matching, so the pair proves the writer
+normalizes an old-direction document into the canonical inward-widening form
+rather than leaving whatever it was given.
 
 ## What the byte assertions are worth
 
