@@ -6,24 +6,26 @@ same `.crv` / `.html` pairs and reports default conformance, optional Tier-2
 adapter coverage, rough CLI timing, and the extension hook surface each
 implementation exposes.
 
-## Snapshot (2026-06-19)
+## Snapshot (2026-08-03)
 
-> Run on 2026-06-19 with all three implementations built from their current
-> `main`. Regenerate any time with `npm run compare:impls`. The figures below
-> are that run; the core corpus has since grown (402 pairs at time of writing),
-> so treat the counts as a historical snapshot, not a live total.
+> Run with all three implementations built from their own `main`. Regenerate any
+> time with `npm run compare:impls`. Timings are from one machine and mean
+> nothing across rows; the counts are the point, and
+> `tests/implementation-comparison-counts.test.mjs` fails when they stop
+> matching the corpus - which is how this page came to quote 302 pairs against a
+> corpus of 529.
 
 <div class="impl-summary-grid">
   <div class="impl-summary-card">
-    <strong>302 / 302</strong>
+    <strong>529 / 529</strong>
     <span>Rust corpus pass</span>
   </div>
   <div class="impl-summary-card">
-    <strong>302 / 302</strong>
+    <strong>529 / 529</strong>
     <span>JS corpus pass</span>
   </div>
   <div class="impl-summary-card">
-    <strong>302 / 302</strong>
+    <strong>529 / 529</strong>
     <span>PHP corpus pass</span>
   </div>
   <div class="impl-summary-card">
@@ -34,11 +36,16 @@ implementation exposes.
 
 | Implementation | Commit | Corpus | Mismatches | Errors | Avg CLI ms/file |
 |----------------|--------|--------|------------|--------|-----------------|
-| Rust | `dd0f150` | `302 / 302` | `0` | `0` | `23.47` |
-| JS | `f54a860` | `302 / 302` | `0` | `0` | `51.22` |
-| PHP | `b8b3e58` | `302 / 302` | `0` | `0` | `53.20` |
+| Rust | `8c636c5` | `529 / 529` | `0` | `0` | `2.34` |
+| JS | `b6c126f` | `529 / 529` | `0` | `0` | `53.34` |
+| PHP | `bf0b340` | `529 / 529` | `0` | `0` | `51.97` |
 
-Spec commit: `7c41ccc`
+Spec commit: `bf06ef4`
+
+The `0` cross-implementation diffs above is the **html** target. Over every
+target the same run reports two, both on the canonical-writer (`carve`) target
+and both filed: carve#481 (the engines serialize different pipeline stages) and
+carve-php#631 (an abbreviation definition hoisted out of its container).
 
 ## Optional Tier-2 Profile
 
@@ -60,11 +67,16 @@ guard, attribute wrapper, and a `symbols` render map; carve#258), so a fresh
 
 | Implementation | Optional pass | Skipped | Mismatches | Errors | Avg CLI ms/file |
 |----------------|---------------|---------|------------|--------|-----------------|
-| Rust | `2 / 2` | `2` | `0` | `0` | `24.42` |
-| JS | `2 / 2` | `2` | `0` | `0` | `48.94` |
-| PHP | `3 / 3` | `1` | `0` | `0` | `52.87` |
+| Rust | `3 / 3` | `30` | `0` | `0` | `2.38` |
+| JS | `3 / 3` | `30` | `0` | `0` | `62.34` |
+| PHP | `3 / 3` | `30` | `0` | `0` | `50.95` |
 
 Optional cross-implementation diffs: `0`
+
+Note the `Skipped` column against a corpus of 33: each engine runs three cases
+and skips thirty, so the `0` diffs is agreement about three documents. The
+features are implemented in all three; there is no way to switch them on from a
+command line, which is the only interface this tool has (carve#496).
 
 ## CLI Timing
 
@@ -277,10 +289,10 @@ Default raw output:
 
 ```text
 Implementation summary
-profile=default/no-opt-in corpus=core corpus_pairs=302
-rust: pass=302/302 mismatch=0 error=0 skipped=0 avg_ms=23.47
-js: pass=302/302 mismatch=0 error=0 skipped=0 avg_ms=51.22
-php: pass=302/302 mismatch=0 error=0 skipped=0 avg_ms=53.20
+profile=default/no-opt-in corpus=core corpus_pairs=529 targets=html
+rust: pass=529/529 mismatch=0 error=0 skipped=0 runs=529 avg_ms=2.34
+js: pass=529/529 mismatch=0 error=0 skipped=0 runs=529 avg_ms=53.34
+php: pass=529/529 mismatch=0 error=0 skipped=0 runs=529 avg_ms=51.97
 cross_impl_diffs=0
 
 Extension capability matrix
@@ -292,29 +304,41 @@ extension_profile_note=this run compares default/no-opt-in output. Use --corpus=
 
 Optional raw output:
 
-> **Note:** the snapshot below is from 2026-06-19 (4 optional corpus pairs).
-> The optional corpus has since grown to 31 pairs (citations-numbered enrichment
-> cases 13-24 for typed locators, integral marker, and suppress-author; code
-> callouts cases 10-12; trailing-comma case 24; the Markdown-target cases 30-31).
-> The `Optional feature coverage` block also names each case's pinned target now
-> (`feature (target): engines`), and the summary line carries a `targets=` field.
-> Regenerate with `npm run compare:impls -- --corpus=optional` to get current
-> counts.
+Timings are from one machine and mean nothing across rows; the counts are the
+point. `tests/implementation-comparison-counts.test.mjs` fails if the
+`corpus_pairs` quoted here stops matching the corpus, which is how this block
+came to say 4 when the corpus held 33.
 
 ```text
 Implementation summary
-profile=optional/opt-in corpus=optional corpus_pairs=4
-rust: pass=2/2 mismatch=0 error=0 skipped=2 avg_ms=24.42
-js: pass=2/2 mismatch=0 error=0 skipped=2 avg_ms=48.94
-php: pass=3/3 mismatch=0 error=0 skipped=1 avg_ms=52.87
+profile=optional/opt-in corpus=optional corpus_pairs=33 targets=html,markdown
+rust: pass=3/3 mismatch=0 error=0 skipped=30 runs=3 avg_ms=2.38
+js: pass=3/3 mismatch=0 error=0 skipped=30 runs=3 avg_ms=62.34
+php: pass=3/3 mismatch=0 error=0 skipped=30 runs=3 avg_ms=50.95
 cross_impl_diffs=0
 
+Target agreement (implementations compared against each other)
+html: compared=2 diffs=0 errors=0 fixtures=yes
+markdown: compared=1 diffs=0 errors=0 fixtures=yes
+
 Optional feature coverage
-social-link-templates: rust, js, php
-symbol-map: rust, js
-smart-quotes-locale-de: php
-bare-url-autolink: php
+social-link-templates (html): rust, js, php
+symbol-map (html): rust, js
+smart-quotes-locale-de (html): php
+bare-url-autolink (html): php
+citations-numbered (html): none
+code-callouts (html): none
+...
+
+NOT COMPARED: 30 of 33 optional cases reached fewer than two engines, so they
+contribute no agreement evidence. This is not a pass.
 ```
+
+**Read the last block, not the `cross_impl_diffs=0` above it.** 30 of the 33
+optional cases reach fewer than two engines, so this run compares 2 documents
+and agrees about them. The features are implemented everywhere; there is no way
+to switch them on from a command line, which is the only interface this tool
+has (carve#496).
 
 ## Scope
 
