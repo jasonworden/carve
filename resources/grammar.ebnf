@@ -378,6 +378,19 @@ code_content = (* any text until matching fence, preserved literally *) ;
 
 (* --- Blockquotes --- *)
 blockquote = blockquote_line, {blockquote_line | lazy_continuation_line | continuation_marker_block}, [caption_slot] ;
+(* PORTABILITY -- NON-NORMATIVE FOR CONFORMANCE. A conformant implementation
+   MAY ignore this block entirely; it constrains no processor.
+
+   Carve accepts a `>` marker with nothing after it. Djot does not: `>quote`
+   is the literal text `>quote` there, and Djot has no `>>` marker at all, so
+   a nested quote must be written `> > q`. A portable document -- one whose
+   source is meant to stay valid Djot -- SHOULD put a space after every `>`.
+
+   Whitespace after the marker beyond one space is free: a tab, two spaces,
+   and a bare `>` separator line all parse identically in both languages.
+
+   Reported by `carve lint --portable` as `portable-quote-marker-space`;
+   see docs/portable-whitespace.md. *)
 (* marked and lazy lines may interleave: `> a` / lazy / `> b` is ONE quote.
    A `+` continuation_marker_block attaches a flush-left block to the quote -- see
    the CONTINUATION MARKER note below and PART 9 §17. *)
