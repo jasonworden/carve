@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a `pos` inside the container they were written in) and breaks (anchored
   at a shared line terminator).
 
+- **PART 11 §2a: the canonical writer does not substitute one construct for
+  another** (carve#544). `to_html(fmt(x)) == to_html(x)` holding is necessary,
+  not sufficient - carve-rs wrote `* %%` as `* +`, turning a line comment into
+  the continuation marker, and carve-js wrote `| %%%` as `| %% %`, splitting a
+  comment-block fence. Both render identically and re-parse to a different AST,
+  which is how the invariant passed while the output was wrong. The escaping
+  half was already decided by §2's own test: `}^p` and `[^` both re-parse
+  identically bare, so all three engines over-escape the first and two of three
+  over-escape the second.
+
 ### Changed
 
 - **A lazy continuation needs an open paragraph, including after a container**
