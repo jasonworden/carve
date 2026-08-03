@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   attribute block, block quote - which all three engines already render loose.
   The sub-list lead was the one shape where they split.
 
+- **PART 11 §10a: an unused definition survives the non-HTML targets**
+  (carve#550). A link, footnote or abbreviation definition nothing references is
+  still emitted by the Markdown, plain-text and terminal renderers; HTML still
+  drops it. Those three are source-shaped enough that discarding an authored
+  construct makes the round trip lossy, and dropping it would make one line's
+  output depend on whether a reference exists elsewhere in the document. The
+  marker is emitted as written - `[^]: %` keeps its caret, and the `[]: %`
+  carve-rs produced on the plain target is neither the source nor a definition.
+
 ### Changed
 
 - **PART 10 §4 states the empty-container body shape** (carve#531). A container
