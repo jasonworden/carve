@@ -2875,6 +2875,31 @@ EOF = (* end of file *) ;
          The executable spec and the reference both render it loose already.
          (carve#538)
 
+      L1b AN INVISIBLE LINE DOES NOT CANCEL THE SEPARATION -- NORMATIVE. L1
+         asks whether the item holds a blank-line-separated second PARAGRAPH.
+         A line that renders nothing -- a comment, a definition, an attribute
+         line -- is not a paragraph, which is why it cannot BE the second one
+         (L1a's argument, carve#621). The same fact means it cannot stand
+         BETWEEN the blank line and the paragraph that follows either: it is
+         not a separator, so the separation it appears to interrupt is intact
+         and the item is LOOSE.
+
+             - a
+
+               %% n
+               text
+
+         is loose. `text` is a second paragraph, the blank line precedes it,
+         and the comment renders nothing.
+
+         WHY IT NEEDED SAYING. Delete the comment and every implementation
+         renders the same document loose. Put it back and three of four
+         flipped to tight -- so a construct that renders NOTHING changed how
+         the blocks around it render. That is the outcome §24 C3 already
+         refuses for a comment's own line, one construct over: an invisible
+         thing may not have a visible effect. carve-js was the one that did
+         not flip. (carve#625, carve-js#625, carve-rs#564)
+
       L2 COMPACT LIST BLOCKS -- Carve deviation from djot/CommonMark. A
          blank line before an item's sub-BLOCK (sub-list, block quote,
          fenced code, fenced div, heading, table) does NOT loosen: the item
