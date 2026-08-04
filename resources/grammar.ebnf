@@ -3154,6 +3154,32 @@ EOF = (* end of file *) ;
              every other line, likewise, never nests -- with no blank it
              lazily continues the open item paragraph (§10 I2), and after a
              blank it ends the item and parses at DOCUMENT level.
+
+             AN INVISIBLE LINE FOLDS LIKE ANY OTHER -- NORMATIVE. "Every other
+             line" includes the ones that are not block-SHAPED: a link
+             reference, footnote or abbreviation definition below the column
+             folds as TEXT, and registers nothing. It is text, so a `[^f]`
+             elsewhere in the document stays literal; half-folding it -- text
+             on the page, definition in the tables -- is not an option the
+             rule offers.
+
+               - - a
+                [^f]: x
+
+             renders `a` and the literal `[^f]: x` inside the inner item. The
+             failure this guards against is not a wrong shape but a
+             DISAPPEARANCE: a definition that fell past the fold branch was
+             pushed trimmed into the item stream, landed at the item's own
+             column 0, and was skipped there as already-extracted, so the
+             author's line rendered as nothing at all (carve-php#721).
+
+             A COMMENT IS THE ONE EXCEPTION -- NORMATIVE. `%%` is recognized
+             at ANY column, above the content column, at it, or below it, and
+             stays invisible. Folding it would make the comment VISIBLE, which
+             is the one outcome a comment may never have, and an indented
+             comment at the top level is already invisible for the same
+             reason. It does not close the item either: a following line
+             continues the item paragraph across it. (carve#618)
            - AT content_column: dedented to the body's column 0, a block
              opener nests and a list marker opens a sublist.
            - ABOVE content_column: the residual indent means the line is no
@@ -4143,14 +4169,18 @@ EOF = (* end of file *) ;
       label was still a footnote. `footnote_label = {character - ']'}+` is
       one-or-more, so it never was: `[^]: %` is a LINK reference definition
       whose label is `^`, which carve-rs#488 settled and all three engines
-      follow. The rule is unchanged - an unused link definition survives the
-      non-HTML targets too - but stating it through an example the grammar's
-      own production contradicts made it unverifiable (carve#589).
+      follow. It is therefore an example of the kind this clause does NOT
+      cover, which is why it was replaced (carve#589).
 
-      Measured when this was written: carve-js and carve-php emit nothing on
-      either target and carve-rs emits the definition, so the two that agree
-      are the two that move. HTML agrees in all three and is unchanged.
-      (carve#550)
+      This paragraph used to end "the rule is unchanged - an unused link
+      definition survives the non-HTML targets too". That was true when
+      written and became false sixty lines up, where the clause was narrowed
+      to the definition kinds that have a node. Left in place it said the
+      opposite of its own clause, and an implementer entering at the `[^]: %`
+      example - the natural entry point, since it is what everyone measures
+      against - read the superseded half. It cost a round of work:
+      carve-php#702 item 8 was filed against the old reading and resolved to
+      no change once the contradiction was untangled. (carve#605)
 
   11. THE MARKDOWN TARGET'S CROSS-REFERENCES -- NORMATIVE. A resolved
       cross-reference is emitted as a Markdown link to the target heading's id,

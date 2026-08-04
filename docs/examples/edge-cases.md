@@ -7493,3 +7493,50 @@ x</p>
 ```
 
 :::::
+:::
+
+## A comment is recognized at any column
+
+Every other construct below an item's content column folds as text (§24 C3), but a comment is invisible by nature and authors indent one freely, so it is found wherever it sits. Folding it would make `%% c` visible, which is the one outcome a comment may never have. The item stays open, so a following line continues it.
+
+::: compare
+
+```carve
+- a
+ %% c
+b
+```
+
+```html
+<ul>
+  <li>a
+    b
+  </li>
+</ul>
+```
+
+:::
+
+## A definition below every content column folds as text
+
+A definition is not block-shaped, but §24 C3's "every other line" covers it too: below every open content column it folds into the item paragraph as literal text and registers nothing, so a reference to it elsewhere stays literal. The failure this guards against is not a wrong shape but a disappearance - a definition that falls past the fold branch lands at the item's own column 0, where it is skipped as already-extracted and renders as nothing at all.
+
+::: compare
+
+```carve
+- - a
+ [^f]: x
+```
+
+```html
+<ul>
+  <li>
+    <ul>
+      <li>a
+[^f]: x</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
