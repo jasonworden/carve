@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { basename, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
+  COMPARISON_TARGETS,
   DEFAULT_TARGET,
   TARGET_EXTENSIONS,
   expectedFileFor,
@@ -52,7 +53,7 @@ const isOptional = corpusName === 'optional'
 // committing four more expected files per corpus case would not add to it. In
 // the optional corpus each case pins its own target and carries the matching
 // expected file (tests/corpus-optional/README.md).
-const ALL_TARGETS = ['html', 'markdown', 'plain', 'carve', 'ansi']
+const ALL_TARGETS = COMPARISON_TARGETS
 const targetsArg = process.argv.find((a) => a.startsWith('--targets='))
 const targetsRequest = targetsArg ? targetsArg.slice('--targets='.length) : 'all'
 let targets =
