@@ -6736,6 +6736,33 @@ fold is about reaching no column at all.
 
 :::
 
+How FAR below the column it sits changes nothing. §24 C3 asks one question - does
+the line reach the content column - and Rule B's "any indent" is scoped to where
+a TOP-LEVEL list may open (C4), not to nesting. Here the sub-list's content
+column is 6 and the outer item's is 4, so a marker at 2 reaches neither and
+folds, exactly as it does one column in.
+
+::: compare
+
+```carve
+-   x
+    - a
+  - b
+```
+
+```html
+<ul>
+  <li>x
+    <ul>
+      <li>a
+- b</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
+
 ## An abbreviation definition is recognized only at document level
 
 `*[TERM]: expansion` defines an abbreviation only as a direct child of the document. Inside a block quote, a list item or a div the line is ordinary paragraph text: it defines nothing and it is preserved as written. An abbreviation is the only definition kind with no marker at the use site, so a definition carried in quoted material would otherwise rewrite every occurrence of its term in the quoting document.
