@@ -6661,3 +6661,27 @@ lazy</p></blockquote>
 ```
 
 :::
+
+A sub-list is not special either. The item's last block is a list whose own last
+item holds an open paragraph, so the flush-left line folds into THAT paragraph -
+the same answer as when the sub-list is opened on its own line.
+
+::: compare
+
+```carve
+- - a
+b
+```
+
+```html
+<ul>
+  <li>
+    <ul>
+      <li>a
+b</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
