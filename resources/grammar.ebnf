@@ -2721,12 +2721,31 @@ EOF = (* end of file *) ;
       A3 MERGE (over all pending blocks, source order):
          * id -> last one wins;
          * key=value -> last value for a given key wins;
-         * class -> ALL classes accumulate in source order, NO
-           de-duplication ({.a .b} then {.b .c} -> class="a b b c",
-           matching djot and carve-php).
+         * class -> ALL classes accumulate in source order, DE-DUPLICATED
+           ({.a .b} then {.b .c} -> class="a b c"). Accumulating is about
+           the LISTS: a later block adds its classes rather than replacing
+           the earlier block's, which is what makes stacking work. A class
+           already present is not added twice, in one block or across
+           several.
          Worked djot-canonical example: {#id} {key=val} {.foo .bar}
          {key=val2} {.baz} {#id2} then "Okay" ->
          <p id="id2" key="val2" class="foo bar baz">Okay</p>.
+
+         THIS SAID "NO de-duplication ... class='a b b c', matching djot and
+         carve-php", and no implementation did that. Measured on
+         `{.a .b}` / `{.b .c}` / `text`: carve-js, carve-rs and carve-php all
+         emit `class="a b c"`, and the INLINE path in this repository's own
+         executable spec deduplicates too. The clause named carve-php as the
+         engine following it, which was the reverse of what carve-php does.
+
+         The worked example above hid it: it has no repeated class, so it
+         reads the same under either rule. `scripts/spec` implemented the
+         sentence rather than the engines and was the only implementation
+         emitting `a b b c` - on a block attribute line and, once §16 gained
+         the definition slot, on a reference definition's attributes as well.
+         A repeated class in one HTML `class` attribute is also a no-op for
+         every consumer, so nothing downstream wanted the duplicate.
+         (carve#615)
       A4 DROP IF DANGLING. pending with no following block element (end of
          document) produces no output.
       A5 MULTI-LINE BLOCK. One block may wrap across lines ({#id\n .foo} is

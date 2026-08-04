@@ -707,7 +707,11 @@ export function parseAttrList(text) {
 }
 
 // PART 9 SS15 A3 merge for BLOCK attribute lines: first-appearance position,
-// last value wins for id/key, classes ACCUMULATE in source order (no dedup)
+// last value wins for id/key, classes ACCUMULATE in source order and
+// DEDUPLICATE - a later list adds its classes rather than replacing the
+// earlier one's, and a class already present is not added twice. This used to
+// keep the duplicate, following a clause sentence no engine implemented
+// (carve#615).
 export function renderBlockAttrs(lists) {
   const parts = []
   const classes = []
@@ -720,7 +724,7 @@ export function renderBlockAttrs(lists) {
           classAt = parts.length
           parts.push(null)
         }
-        classes.push(a[1])
+        if (!classes.includes(a[1])) classes.push(a[1])
       } else if (a[0] === 'id') {
         if (seen.has('#id')) parts[seen.get('#id')] = ` id="${escapeAttr(a[1])}"`
         else {
