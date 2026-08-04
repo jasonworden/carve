@@ -6685,3 +6685,52 @@ b</li>
 ```
 
 :::
+
+The line does not have to be flush left, and it does not have to look like prose.
+One column in it reaches no content column - not the sub-list's, not the outer
+item's - so it opens nothing and folds as text, marker and all.
+
+::: compare
+
+```carve
+- - a
+ - b
+```
+
+```html
+<ul>
+  <li>
+    <ul>
+      <li>a
+- b</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
+
+A heading in that position folds the same way. Flush left it would be a heading,
+and at the sub-list's own column the marker above would be a sibling item: the
+fold is about reaching no column at all.
+
+::: compare
+
+```carve
+- x
+  - a
+ # H
+```
+
+```html
+<ul>
+  <li>x
+    <ul>
+      <li>a
+# H</li>
+    </ul>
+  </li>
+</ul>
+```
+
+:::
