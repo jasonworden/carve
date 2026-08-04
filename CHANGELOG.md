@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **PART 9 §15 A3: a repeated class collapses** (carve#615). The merge said
+  "ALL classes accumulate in source order, NO de-duplication ... class='a b b
+  c', matching djot and carve-php", and no implementation did that. Measured on
+  `{.a .b}` / `{.b .c}` / `text`: carve-js, carve-rs and carve-php all emit
+  `class="a b c"`, and the INLINE path in `scripts/spec` deduplicates too - so
+  the clause named as its witness the engine that contradicts it. Accumulating
+  is about the LISTS: a later block adds its classes rather than replacing the
+  earlier block's, and a class already present is not added twice.
+
+  The worked example in the clause has no repeated class, which is why it read
+  the same either way and why nothing caught this. `scripts/spec` implemented
+  the sentence rather than the engines and was the only implementation emitting
+  the duplicate - on a block attribute line, and on a reference definition's
+  attributes once §16 gained the slot.
+
 - **PART 12 §7: hoisting the node is not the same as defining the abbreviation**
   (carve#708). An `abbreviation_def` written inside a container is a document
   child wherever it was written, and it expands occurrences only when it was
