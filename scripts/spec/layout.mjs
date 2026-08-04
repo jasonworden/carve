@@ -1339,6 +1339,9 @@ function collectItems(lines, i, list, state) {
     // before the next sibling marker - still applies when that sibling arrives,
     // so the blank is remembered rather than consumed by the attachment.
     let blankBeforeInvisible = false
+    // A blank line was seen, and only invisible lines have followed it so far
+    // (§17 L1b). The next PARAGRAPH closes the separation and loosens.
+    let pendingSeparation = false
     {
       const headText = head.text.trim()
       if (QUOTE.test(headText)) openPara = (QUOTE.exec(headText)[1] ?? '').trim() !== ''
@@ -1443,7 +1446,8 @@ function collectItems(lines, i, list, state) {
             COMMENT_FENCE.test(dedented) ||
             FOOTNOTE_DEF.test(dedented) ||
             LINK_DEF.test(dedented) ||
-            ABBR_DEF.test(dedented)
+            ABBR_DEF.test(dedented) ||
+            parseAttrList(dedented) !== null
           ) {
             // An INVISIBLE construct is not a second paragraph, and SS17 L1
             // asks for one: "some item holds a blank-line-separated second
@@ -1457,6 +1461,14 @@ function collectItems(lines, i, list, state) {
             itemLines.push('')
             openPara = false
             blankBeforeInvisible = true
+            // §17 L1b: the invisible line is not a separator either, so the
+            // blank line's separation survives it. If a PARAGRAPH follows, the
+            // item holds a blank-line-separated second paragraph and is loose;
+            // the invisible line just sits in the gap. Without this, deleting
+            // the comment from `- a` / blank / `  %% n` / `  text` changed the
+            // rendering of both paragraphs - a line that outputs nothing making
+            // a visible difference (carve#625).
+            pendingSeparation = true
             i = j
             continue
           }
@@ -1491,6 +1503,22 @@ function collectItems(lines, i, list, state) {
       const nm = matchMarker(line)
       if (col >= contentCol) {
         const dedented = dedent(line, contentCol)
+        if (
+          pendingSeparation &&
+          !isBlank(dedented) &&
+          !opensSubBlock(dedented) &&
+          !matchMarker(dedented) &&
+          !COMMENT_LINE.test(dedented) &&
+          !COMMENT_FENCE.test(dedented) &&
+          !FOOTNOTE_DEF.test(dedented) &&
+          !LINK_DEF.test(dedented) &&
+          !ABBR_DEF.test(dedented) &&
+          parseAttrList(dedented) === null
+        ) {
+          // §17 L1b: a second paragraph, still blank-line-separated.
+          list.tight = false
+          pendingSeparation = false
+        }
         itemLines.push(dedented)
         // Track an open fenced code block (its matching closer clears it) so the
         // blank-line branch above knows an interior blank is fence content.
