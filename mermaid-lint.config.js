@@ -24,11 +24,17 @@ export default {
   // (jasonworden/mermaid-lint#120).
   //
   // A diagram that genuinely has to break a rule suppresses it in place rather
-  // than forcing the rule off repo-wide, and the directive must carry a reason:
+  // than forcing the rule off repo-wide, and the directive must carry a reason
+  // (a bare one is itself reported, as `suppression-malformed`):
   //
   //   %% mermaid-lint-disable-next-line prefer-flowchart: pinned to legacy syntax
   //
-  // Also -disable (rest of diagram), -disable-diagram, -disable-file, -enable.
+  // Also -disable (rest of diagram), -disable-diagram and -enable, all as `%%`
+  // comments inside the diagram. -disable-file is the exception: it is only
+  // honoured as a Markdown HTML comment above the fence, not as `%%`.
+  //
+  //   <!-- mermaid-lint-disable-file prefer-flowchart: legacy doc examples -->
+  //
   // Requires mermaid-lint >= 0.36.0.
   strict: true,
 }
