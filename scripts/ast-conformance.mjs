@@ -299,11 +299,18 @@ function checkAdjacentTextRuns(doc, findings) {
   scan(doc.children ?? [], '$.children')
 }
 
-function checkDocument(doc, source, findings) {
-  checkShape(doc, findings)
-  checkAdjacentTextRuns(doc, findings)
-  checkFrontmatterSurvives(doc, source, findings)
-  checkPositions(doc, source, findings)
+function checkDocument(name, doc, source, findings) {
+  // Prefix every finding with the document, the way the parse/serialize
+  // failures above already do. Without it the shape and position checks - the
+  // large majority - reached the report anonymous, so the grouping had no
+  // filename to keep and no finding could be opened (carve#534 lists clusters
+  // nobody could reproduce for exactly this reason).
+  const own = []
+  checkShape(doc, own)
+  checkAdjacentTextRuns(doc, own)
+  checkFrontmatterSurvives(doc, source, own)
+  checkPositions(doc, source, own)
+  for (const f of own) findings.push(name.endsWith('.crv') ? name + ': ' + f : f)
 }
 
 /**
@@ -431,7 +438,7 @@ for (const { name, source } of samples) {
     jsFindings.push(`${name}: parse threw - ${error.message}`)
     continue
   }
-  checkDocument(doc, source, jsFindings)
+  checkDocument(name, doc, source, jsFindings)
   referenceShapes.set(name, shapeOf(doc))
 
   // PART 12 §6: serialize then deserialize must equal the parse.
@@ -475,7 +482,7 @@ if (rsBinary) {
       rsFindings.push(`${name}: could not serialize - ${String(error.message).split('\n')[0]}`)
       continue
     }
-    checkDocument(doc, source, rsFindings)
+    checkDocument(name, doc, source, rsFindings)
     checkShapeParity(name, doc, rsFindings)
   }
   const rsBuild = buildStatus(rsBinary, resolve(rsDir, 'src'), ['.rs'])
@@ -512,7 +519,7 @@ if (existsSync(resolve(rbDir, 'lib/carve'))) {
       rbFindings.push(`${name}: could not serialize - ${String(error.message).split('\n')[0]}`)
       continue
     }
-    checkDocument(doc, source, rbFindings)
+    checkDocument(name, doc, source, rbFindings)
     checkShapeParity(name, doc, rbFindings)
   }
   // The compiled extension, not the Ruby source: carve-rb wraps carve-rs
@@ -557,7 +564,7 @@ if (existsSync(resolve(phpDir, 'bin/carve'))) {
       phpFindings.push(`${name}: could not serialize - ${String(error.message).split('\n')[0]}`)
       continue
     }
-    checkDocument(doc, source, phpFindings)
+    checkDocument(name, doc, source, phpFindings)
     checkShapeParity(name, doc, phpFindings)
   }
   report(`carve-php (over bin/carve --json, ${satelliteSamples.length} documents)`, phpFindings)
@@ -574,16 +581,23 @@ function report(label, findings) {
     console.log(`${label}: conformant\n`)
     return
   }
-  // Group, because one missing field repeats across every document.
+  // Group, because one missing field repeats across every document. Keep ONE
+  // document per group: grouping strips the filename, and a finding nobody can
+  // reproduce is a finding nobody fixes. The example is the FIRST document that
+  // produced the group, so it is stable across runs.
   const counts = new Map()
   for (const f of findings) {
+    const file = /^([^:]+\.crv): /.exec(f)?.[1] ?? null
     const key = f.replace(/^[^:]+\.crv: /, '').replace(/at \$[^\s]*/, 'at <path>')
-    counts.set(key, (counts.get(key) ?? 0) + 1)
+    const seen = counts.get(key)
+    if (seen) seen.n += 1
+    else counts.set(key, { n: 1, example: file })
   }
   console.log(`${label}: ${findings.length} findings, ${counts.size} distinct`)
-  const ranked = [...counts].sort((a, b) => b[1] - a[1])
-  for (const [key, n] of ranked.slice(0, DISPLAY_LIMIT)) {
-    console.log(`  ${String(n).padStart(4)}x ${key}`)
+  const ranked = [...counts].sort((a, b) => b[1].n - a[1].n)
+  for (const [key, entry] of ranked.slice(0, DISPLAY_LIMIT)) {
+    const where = entry.example ? '  [' + entry.example + ']' : ''
+    console.log(`  ${String(entry.n).padStart(4)}x ${key}${where}`)
   }
   // Say so when the display is truncated. This used to end here, so a run with
   // nine distinct findings looked exactly like a run with eight.
