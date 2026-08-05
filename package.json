@@ -4,6 +4,9 @@
   "private": true,
   "type": "module",
   "description": "Documentation site for Carve, a post-Markdown markup language",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "docs:dev": "node scripts/publish-schema.mjs && vitepress dev docs",
     "docs:build": "node scripts/publish-schema.mjs && vitepress build docs",

@@ -15,6 +15,9 @@ reference, the migration guide, and the interactive playground.
 
 ## Building locally
 
+Requires **Node.js 22 or newer** (`.nvmrc` pins the minimum; `nvm use` or
+`fnm use` picks it up).
+
 ```bash
 npm install
 npm run docs:dev     # local preview at http://localhost:5173/carve/
