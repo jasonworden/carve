@@ -72,6 +72,18 @@ export function renderDoc(doc) {
   let html = out.join('\n')
   html = resolveFootnotes(html, ctx) // first: bodies may add ref/xref sentinels
   html = resolveRefs(html, ctx)
+  // PART 10: a paragraph that is ONLY an image renders as a bare <img>. The
+  // inline form is caught at paragraph-render time (IMG_ONLY above), but an
+  // image REFERENCE is still a sentinel then and only becomes an <img> here,
+  // so the same unwrap has to run once resolution has happened.
+  // The paragraph's own block attributes come with it, spliced into the tag the
+  // same way the inline path does at renderBlock. Matching only a bare `<p>`
+  // left `{.block}` above an image REFERENCE rendering as
+  // `<p class="block"><img ...></p>`, where the direct form one line up gives a
+  // bare `<img class="block" ...>`.
+  html = html.replace(/<p( [^>]*)?>(<img [^>]*>)<\/p>/g, (_m, pattrs, img) =>
+    pattrs ? img.replace('<img ', `<img${pattrs} `) : img,
+  )
   html = resolveCrossrefs(html, ctx)
   html = applyAbbreviations(html, ctx)
   return html
@@ -492,6 +504,29 @@ function renderTable(node, depth, ctx) {
   return out.join('\n')
 }
 
+
+/*
+ * PART 9R R1 for `![alt][ref]`: the label resolves against the SAME linkDefs
+ * entry a reference link uses, and the image takes url, title AND attrs from
+ * it. An unresolved image reference stays literal source, matching the link
+ * side (PART 12 §3a keeps the construct rather than discarding it).
+ */
+function resolveImageRef(parsed, ctx, literal) {
+  const { label, alt, attrList } = parsed
+  if (typeof alt !== 'string') return literal
+  // Keyed exactly as a link reference is (carve#648): the label AS WRITTEN,
+  // whitespace collapsed. `alt` is the source string here, not the rendered
+  // text, so the two paths agree - which is the point of this change.
+  const key = label ?? alt.trim().replace(/\s+/g, ' ')
+  const def = ctx.linkDefs.get(key)
+  if (!def) return `![${alt}][${label ?? ''}]`
+  const t = def.title ? ` title="${escapeAttr(def.title)}"` : ''
+  const a = def.attrs?.length
+    ? renderBlockAttrs([def.attrs, attrList ?? []])
+    : renderAttrs(attrList ?? [])
+  return `<img src="${escapeAttr(checkUrl(def.url))}" alt="${escapeAttr(alt)}"${t}${a}>`
+}
+
 // --- PART 9R R1: reference links --------------------------------------------
 function resolveRefs(html, ctx) {
   return html.replace(/ref:(\{.*?\})/g, (_, json) => {
@@ -504,7 +539,8 @@ function resolveRefs(html, ctx) {
     } catch {
       return _
     }
-    const { label, text, source, attrList } = parsed
+    const { label, text, source, attrList, img } = parsed
+    if (img) return resolveImageRef(parsed, ctx, _)
     if (typeof text !== 'string') return _
     // A collapsed reference is keyed by the label AS WRITTEN (whitespace
     // collapsed), the same spelling a definition line registers. The rendered
