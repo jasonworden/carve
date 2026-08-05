@@ -248,7 +248,7 @@ yarn add @markup-carve/carve
 %% renderer enables the Mermaid extension; otherwise it shows as a code block.
 
 ```mermaid
-graph TD
+flowchart TD
     A[Write Carve] --> B{LSP diagnostics}
     B -->|clean| C[Preview]
     B -->|warnings| D[Quick fix]

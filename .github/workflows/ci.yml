@@ -7,8 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+# Every job here only reads the repo; nothing publishes or comments.
+permissions:
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,11 +19,28 @@ jobs:
   conformance:
     name: spec-corpus conformance
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20, 22]
+        # The floor tracks @markup-carve/carve's `engines` field (">=20"),
+        # not Node's EOL calendar: 20 is past end-of-life, but it is still
+        # the oldest runtime the package promises to work on, so the
+        # reference implementation has to be shown conformant there. Raise
+        # this leg only when carve-js raises `engines`.
+        #
+        # The ceiling is this repo's own contribution. carve-js declares
+        # ">=20" but its matrix stops at 22, so 24 (Active LTS) and 26
+        # (Current) are unverified anywhere else.
+        #
+        # 26 gates like every other leg rather than running
+        # continue-on-error: these steps are the corpus, the formal Core
+        # grammar and the pinned reference build, so a red leg is a real
+        # conformance signal — and a spec repo wants to hear that loudly. If
+        # a future Node genuinely breaks a toolchain rather than the spec,
+        # demote that leg then, with the breakage on record.
+        node-version: [20, 22, 24, 26]
 
     steps:
       - uses: actions/checkout@v6
@@ -33,6 +51,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
+          cache: npm
 
       # Installs ohm-js (the executable spec) and the pinned
       # `@markup-carve/carve` reference build the conformance steps render
@@ -76,6 +95,7 @@ jobs:
   docs-build:
     name: docs build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v6
@@ -84,7 +104,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Prefer HTTPS for Git dependencies
@@ -101,13 +121,14 @@ jobs:
   mermaid-lint:
     name: mermaid diagrams valid
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - uses: actions/checkout@v6
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Prefer HTTPS for Git dependencies
@@ -118,7 +139,7 @@ jobs:
       - run: npm ci
 
       # Validate every Mermaid diagram embedded in tracked docs, including the
-      # ```mermaid blocks inside .crv sources (via --ext crv), so a broken
-      # diagram fails the PR instead of silently rendering as an error in the
-      # browser.
+      # ```mermaid blocks inside .crv sources, so a broken diagram fails the PR
+      # instead of silently rendering as an error in the browser. Discovery and
+      # strictness are configured in mermaid-lint.config.js.
       - run: npm run lint:mermaid
