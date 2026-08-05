@@ -15,8 +15,9 @@ reference, the migration guide, and the interactive playground.
 
 ## Building locally
 
-Requires **Node.js 22 or newer** (`.nvmrc` pins the minimum; `nvm use` or
-`fnm use` picks it up).
+Requires **Node.js 22 or newer**. `.nvmrc` selects Node 24 - the current LTS,
+and the version CI builds and deploys the site with - so `nvm use` or `fnm use`
+puts you on the same runtime as production.
 
 ```bash
 npm install

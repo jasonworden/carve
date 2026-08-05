@@ -29,8 +29,9 @@ one repo.
 
 For this repo in particular:
 
-- Use Node.js 22 or newer (`.nvmrc` pins the minimum). CI runs the conformance
-  corpus on Node 22, 24, and 26.
+- Node.js 22 is the minimum (`package.json` `engines`). `.nvmrc` selects Node 24,
+  the current LTS and the version the docs build and deploy run on. CI runs the
+  conformance corpus on Node 22, 24, and 26.
 - Spec or examples changes should normally keep `npm test` green.
 - If you change `docs/examples.md`, regenerate the corpus and verify the
   resulting fixture diff is intentional.
